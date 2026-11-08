@@ -20,6 +20,7 @@ Phasen, Befunde, Risiken, offene Punkte und Status stehen in [docs/PLAN.md](docs
 - Nichts als erledigt melden, was nicht wirklich gebaut oder getestet wurde.
 - iOS kann unter Windows nicht gebaut werden, und Manuel hat keinen Mac. iOS wird nur über die macOS-CI und
   Simulator-Screenshots geprüft. Das klar sagen. Das Gefühl von Glass und Swipe-Back muss jemand separat testen.
+- Der iOS-Job der CI läuft nur bei PRs von `develop` nach `main`, Feature-PRs prüfen iOS also nicht.
 - Keine Secrets anlegen oder eintragen, das macht Manuel selbst.
 
 ## Architektur
