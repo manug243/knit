@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: android-actions/setup-android@v4
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Install Android SDK platform
+        run: sdkmanager "platforms;android-37.0"
+      - name: Verify library and example
+        run: ./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:lint :example:compileKotlinDesktop :androidApp:lintDebug :androidApp:assembleDebug
+
+  ios:
+    # iOS only runs when develop is promoted to main.
+    if: github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref == 'develop'
+    # Liquid Glass needs the iOS 26 SDK, so this job pins a runner image that ships Xcode 26.
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: android-actions/setup-android@v4
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Install Android SDK platform
+        run: sdkmanager "platforms;android-37.0"
+      - name: Require Xcode 26
+        run: |
+          xcodebuild -version
+          MAJOR=$(xcodebuild -version | sed -n 's/^Xcode \([0-9]*\).*/\1/p')
+          if [ "$MAJOR" -lt 26 ]; then
+            echo "Expected Xcode 26 or newer, got $MAJOR"
+            exit 1
+          fi
+      - name: Test iOS target
+        run: ./gradlew :knit:iosSimulatorArm64Test
+      - name: Build iOS example
+        run: |
+          xcodebuild build \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/ios \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Capture simulator screenshots
+        run: bash .github/scripts/ios-screenshots.sh build/ios/Build/Products/Debug-iphonesimulator/knit.app build/ios-screenshots
+      - name: Upload simulator screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-screenshots
+          path: build/ios-screenshots
+          if-no-files-found: warn
