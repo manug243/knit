@@ -11,6 +11,8 @@ Phasen, Befunde, Risiken, offene Punkte und Status stehen in [docs/PLAN.md](docs
 - Antworten auf Deutsch. Code, Kommentare und Commits auf Englisch.
 - Nicht direkt auf `main` arbeiten. Ablauf wie in compose-skeleton: Feature-Branch, PR nach `develop`, PR nach `main`.
 - Pushen und PRs nur nach Rückfrage bei Manuel.
+- Gemergte Branches außer `main` und `develop` werden auf GitHub und lokal gelöscht (Details in der globalen
+  `~/.claude/CLAUDE.md`). `delete_branch_on_merge` ist im Repo ausgeschaltet, `develop` darf nie verschwinden.
 - `docs/PLAN.md` nach jeder abgeschlossenen Phase aktualisieren.
 - Nach jeder Phase kurz berichten: was läuft, was ungeprüft ist.
 - `https://github.com/AMiketta/cmp-ios-chrome` gehört einem Kollegen und ist strikt read-only: keine Pushes,
@@ -20,7 +22,9 @@ Phasen, Befunde, Risiken, offene Punkte und Status stehen in [docs/PLAN.md](docs
 - Nichts als erledigt melden, was nicht wirklich gebaut oder getestet wurde.
 - iOS kann unter Windows nicht gebaut werden, und Manuel hat keinen Mac. iOS wird nur über die macOS-CI und
   Simulator-Screenshots geprüft. Das klar sagen. Das Gefühl von Glass und Swipe-Back muss jemand separat testen.
-- Der iOS-Job der CI läuft nur bei PRs von `develop` nach `main`, Feature-PRs prüfen iOS also nicht.
+- Der iOS-Job der CI läuft nur bei PRs von `develop` nach `main` und per manuellem Start (`workflow_dispatch`),
+  Feature-PRs prüfen iOS also nicht. Der Job erzeugt auch eine unsignierte IPA (`knit-unsigned-ipa`) für Tests auf
+  Manuels iPhone per AltStore, siehe `docs/PLAN.md`.
 - Keine Secrets anlegen oder eintragen, das macht Manuel selbst.
 
 ## Architektur
