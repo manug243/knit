@@ -15,8 +15,10 @@ Stand: 2026-11-08
 ## Ergebnis Phase 0 (2026-11-08)
 
 Gewählte Versionen, gegen Maven Central geprüft: CMP 1.12.2 (weiterhin letzte stabile, 1.13.0 steht bei beta02), Kotlin
-2.3.21, AGP 9.2.1, Gradle 9.4.1, Nav3 1.2.0, lifecycle-viewmodel-navigation3 2.11.0, CMP Material3 1.12.0-alpha03 (für
-1.12 gibt es keine stabile Version). Die iOS-klibs von Nav3, Lifecycle und Compose sind mit Kotlin 2.2.20 gebaut.
+2.3.21, AGP 9.2.1, Gradle 9.4.1, Nav3 UI 1.1.2, lifecycle-viewmodel-navigation3 2.11.0, CMP Material3 1.12.0-alpha03 (für
+1.12 gibt es keine stabile Version). Nav3 UI 1.2.0 scheidet aus: Die iOS-klib hat ABI 2.4.0, Kotlin 2.3.21 liest nur bis
+2.3.0. Für die Kompatibilität zählt `abi_version` im klib-Manifest, nicht die `kotlin-stdlib`-Version im POM. Ob
+`rememberDecoratedNavEntries` in Nav3 1.1.2 verfügbar ist, wird in Phase 1 geprüft.
 
 Abweichung vom Auftrag: Zusätzlich zu `:example` gibt es `:androidApp`, weil AGP 9 `com.android.application` nicht
 zusammen mit dem KMP-Plugin erlaubt. `:example` enthält den gemeinsamen Code, `:androidApp` nur die Activity.
