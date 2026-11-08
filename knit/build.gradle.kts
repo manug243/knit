@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.maven.publish)
 }
 
@@ -28,11 +29,19 @@ kotlin {
             api(libs.compose.mp.runtime)
             api(libs.compose.mp.ui)
             api(libs.navigation3.ui)
+            api(libs.savedstate)
+            implementation(libs.compose.mp.animation)
+            implementation(libs.compose.mp.ui.backhandler)
             implementation(libs.compose.mp.foundation)
+            implementation(libs.compose.mp.material3)
             implementation(libs.lifecycle.viewmodel.navigation3)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
+        }
+        getByName("desktopTest").dependencies {
+            implementation(compose.desktop.currentOs)
+            implementation(libs.compose.mp.ui.test)
         }
     }
 }
