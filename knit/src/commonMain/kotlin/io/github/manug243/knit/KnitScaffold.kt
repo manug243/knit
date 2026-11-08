@@ -20,12 +20,13 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 
 /**
- * Space at the bottom of the screen that knit's chrome covers. Screens should pad their scrollable
- * content by it, for example as `contentPadding` of a `LazyColumn`.
+ * Space that knit's chrome covers. Screens should pad their scrollable content by it, for example
+ * as `contentPadding` of a `LazyColumn`.
  *
- * On iOS the native tab bar floats above the content, so this is the height of the bar while it is
- * visible and zero while it is hidden. On Android and Desktop the bar sits next to the content and
- * this is zero. System insets such as the status bar are not included.
+ * On iOS the native bars float above the content, so the bottom is the height of the tab bar and
+ * the top the height of the navigation bar below the status bar, each while the bar is visible and
+ * zero otherwise. On Android and Desktop the bars sit next to the content and this is zero.
+ * The status bar inset itself is not part of the top value, add the system insets as usual.
  */
 public val LocalKnitContentPadding: androidx.compose.runtime.ProvidableCompositionLocal<PaddingValues> =
     staticCompositionLocalOf { PaddingValues(0.dp) }
@@ -41,6 +42,9 @@ public val LocalKnitContentPadding: androidx.compose.runtime.ProvidableCompositi
  * @param tabs declares title and icon of every tab of the [navigator]. It runs on every
  * recomposition, so titles and icons can change at runtime.
  * @param entryProvider maps a [NavKey] to its screen, usually built with `entryProvider { ... }`.
+ * @param topBar returns the top bar for the screen of a [NavKey], or null for a screen without one.
+ * Below a tab's start screen the bar also shows a back button that pops the screen. It is called
+ * with the top of the current tab's stack, so it follows navigation and can read the key's arguments.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -49,6 +53,7 @@ public fun <T : KnitTab> KnitScaffold(
     tabs: KnitTabsScope<T>.() -> Unit,
     entryProvider: (NavKey) -> NavEntry<NavKey>,
     modifier: Modifier = Modifier,
+    topBar: (NavKey) -> KnitTopBar? = { null },
 ) {
     val items = buildTabItems(tabs)
     require(items.map { it.tab }.toSet() == navigator.tabs.toSet()) {
@@ -83,11 +88,22 @@ public fun <T : KnitTab> KnitScaffold(
     val barItems = items.map { ShellItem(it.title, it.icon) }
     val selectedIndex = items.indexOfFirst { it.tab == navigator.currentTab }
 
+    val stack = navigator.currentBackStack
+    val topConfig = stack.lastOrNull()?.let(topBar)
+    val shellTopBar = topConfig?.let { config ->
+        ShellTopBar(
+            title = config.title,
+            backTitle = if (stack.size > 1) topBar(stack[stack.lastIndex - 1])?.title ?: "Back" else null,
+            onBack = { navigator.back() },
+        )
+    }
+
     KnitPlatformShell(
         items = barItems,
         selectedIndex = selectedIndex,
         barVisible = navigator.isAtTabRoot && !imeVisible,
         onSelect = { index -> navigator.select(items[index].tab) },
+        topBar = shellTopBar,
         modifier = modifier,
     ) {
         // Keyed by tab so that switching tabs swaps the content without a push or pop animation.
@@ -115,6 +131,7 @@ internal expect fun KnitPlatformShell(
     selectedIndex: Int,
     barVisible: Boolean,
     onSelect: (Int) -> Unit,
+    topBar: ShellTopBar?,
     modifier: Modifier,
     content: @Composable () -> Unit,
 )
