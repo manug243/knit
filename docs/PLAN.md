@@ -7,10 +7,19 @@ Stand: 2026-11-08
 | Phase | Inhalt | Status |
 |---|---|---|
 | 0 | Grundgerüst | gebaut und getestet, iOS über die macOS-CI (Xcode 26) grün |
-| 1 | Tabs | in Arbeit: Glass-Spike belegt, `KnitNavigator` und `KnitScaffold` gebaut und auf Desktop getestet, iOS-Teil ungeprüft |
+| 1 | Tabs | in Arbeit: `KnitNavigator` und `KnitScaffold` gebaut, auf Desktop getestet und unter Xcode 26 kompiliert (CI grün), Verhalten auf iOS und Android-Gerät ungeprüft |
 | 2 | Back und Top-Bar | offen |
 | 3 | Veröffentlichung | offen |
 | 4 | `UINavigationController`-Backend (experimentell) | offen |
+
+## Test auf dem iPhone (ohne Mac)
+
+Die CI baut im iOS-Job zusätzlich eine unsignierte IPA (Artefakt `knit-unsigned-ipa`, Release-Build für Geräte). Der Job
+läuft bei PRs von `develop` nach `main` und per manuellem Start (`workflow_dispatch`). Installation mit AltStore unter
+Windows und einer eigenen Test-Apple-ID: IPA laden und entpacken, aufs iPhone bringen, in AltStore öffnen. Die Signatur
+hält 7 Tage, AltStore erneuert sie, solange AltServer läuft und PC und iPhone im selben WLAN sind. Für die Glass-Leiste
+braucht das iPhone iOS 26, ab iOS 18.2 läuft die Demo mit der klassischen Leiste. Ungeprüft: der IPA-Schritt selbst und
+die Installation, beides wurde noch nie ausgeführt.
 
 ## Ergebnis Glass-Spike (2026-11-08)
 
@@ -37,9 +46,13 @@ aktiven Tabs. Ob dadurch auch ViewModels inaktiver Tabs überleben, ist nicht ge
 Geprüft unter Windows: 12 Navigator-Tests, 2 Tab-DSL-Tests, 5 Compose-UI-Tests auf Desktop (Tab-Wechsel, Zustand und
 Detail-Stack inaktiver Tabs, Bar ausgeblendet unter der Wurzel), Lint, Android-Build.
 
+Geprüft über die macOS-CI (PR 5, Xcode 26, grün): `KnitPlatformShell.ios.kt` kompiliert, `iosSimulatorArm64Test` und
+`xcodebuild` laufen. Der Start-Screenshot zeigt die Glass-Leiste über den Streifen, der Inhalt scheint unscharf durch.
+
 Ungeprüft:
-- iOS: `KnitPlatformShell.ios.kt` wurde nie kompiliert. Die Höhe ist `max(49 pt + Inset, sizeThatFits)`, ob das auf
-  iOS 26 stimmt, ist offen. Ebenso das Ein- und Ausblenden, das Zusammenspiel mit Tastatur und die Tab-Items zur Laufzeit.
+- iOS-Verhalten: Die Höhe ist `max(49 pt + Inset, sizeThatFits)`, ob das auf iOS 26 stimmt, ist offen, ebenso das Padding
+  am Listenende. Auch Tippen, Tab-Wechsel, Ein- und Ausblenden, Tastatur und Tab-Items zur Laufzeit sind nur
+  geschrieben, es gibt nur einen Screenshot vom Start. Dafür dient der Test auf dem iPhone (siehe unten).
 - Die Material-Bar und die Rail auf einem Android-Gerät. Nur der Desktop-Pfad lief in Tests.
 - ViewModel-Erhalt inaktiver Tabs, Rotation, Prozess-Tod.
 
