@@ -29,6 +29,8 @@ jobs:
         run: ./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:lint :example:compileKotlinDesktop :androidApp:lintDebug :androidApp:assembleDebug
 
   ios:
+    # iOS only runs when develop is promoted to main.
+    if: github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref == 'develop'
     # Liquid Glass needs the iOS 26 SDK, so this job pins a runner image that ships Xcode 26.
     runs-on: macos-26
     steps:
