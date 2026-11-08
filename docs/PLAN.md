@@ -7,10 +7,48 @@ Stand: 2026-11-08
 | Phase | Inhalt | Status |
 |---|---|---|
 | 0 | Grundgerüst | gebaut und getestet, iOS über die macOS-CI (Xcode 26) grün |
-| 1 | Tabs | offen |
+| 1 | Tabs | in Arbeit: Glass-Spike belegt, `KnitNavigator` und `KnitScaffold` gebaut und auf Desktop getestet, iOS-Teil ungeprüft |
 | 2 | Back und Top-Bar | offen |
 | 3 | Veröffentlichung | offen |
 | 4 | `UINavigationController`-Backend (experimentell) | offen |
+
+## Ergebnis Glass-Spike (2026-11-08)
+
+Der Spike (`example/src/iosMain/.../SpikeTabBar.kt`) kompiliert unter Xcode 26 und läuft im Simulator (CI-Lauf von
+PR 3, iOS-Job grün). Der Screenshot zeigt einen schwebenden Kapsel-Tabbar mit hervorgehobenem Auswahl-Pill, durch den
+der Compose-Inhalt unscharf durchscheint (Text eines Streifens hinter der Leiste). Das ist das Liquid-Glass-Aussehen,
+und es entsteht mit einem Stock-`UITabBar` ohne eigene Appearance-Konfiguration über einem einzigen Compose-Baum.
+
+Nicht belegt, weil nur ein statischer Screenshot vorliegt: Verhalten beim Scrollen (Brechung, Minimieren), Tippen und
+Wechseln der Tabs, Rotation, iPad, Tastatur. Die feste Höhe von 49 pt plus Inset passt im Screenshot, wird aber in
+Phase 1 zur Laufzeit gemessen. Das Gefühl muss weiterhin jemand auf einem Gerät testen.
+
+## Stand Phase 1 (2026-11-08)
+
+Gebaut: `KnitNavigator` (ein Back-Stack pro Tab, WeList-Verhalten), `KnitScaffold`, `KnitIcon`, Tab-DSL,
+`LocalKnitContentPadding`. Plattformhülle per `expect`: Material 3 mit Bar und Rail ab 600 dp für Android und Desktop
+(`MaterialShell`), `UITabBar` als Overlay für iOS. Die Bar ist nur an der Tab-Wurzel sichtbar und blendet bei Tastatur aus.
+Das Beispiel nutzt den Scaffold, der Spike ist entfernt.
+
+Befund zum Verdacht aus dem Auftrag: In Nav3 1.1.2 gibt es `rememberDecoratedNavEntries(backStack, entryDecorators,
+entryProvider)` und `NavDisplay(entries = ...)`. Der Scaffold hält die Entries aller Tabs dekoriert und zeigt nur die des
+aktiven Tabs. Ob dadurch auch ViewModels inaktiver Tabs überleben, ist nicht getestet (nur `rememberSaveable`-Zustand).
+
+Geprüft unter Windows: 12 Navigator-Tests, 2 Tab-DSL-Tests, 5 Compose-UI-Tests auf Desktop (Tab-Wechsel, Zustand und
+Detail-Stack inaktiver Tabs, Bar ausgeblendet unter der Wurzel), Lint, Android-Build.
+
+Ungeprüft:
+- iOS: `KnitPlatformShell.ios.kt` wurde nie kompiliert. Die Höhe ist `max(49 pt + Inset, sizeThatFits)`, ob das auf
+  iOS 26 stimmt, ist offen. Ebenso das Ein- und Ausblenden, das Zusammenspiel mit Tastatur und die Tab-Items zur Laufzeit.
+- Die Material-Bar und die Rail auf einem Android-Gerät. Nur der Desktop-Pfad lief in Tests.
+- ViewModel-Erhalt inaktiver Tabs, Rotation, Prozess-Tod.
+
+Bekannte Lücken und Folgearbeiten:
+- `BackHandler` ist in dieser CMP-Version veraltet, Ersatz ist `NavigationEventHandler`. Migration offen.
+- Ein Tab-Wechsel hat keine Animation. Der Inhalt wird per `key(currentTab)` getauscht.
+- `NavigationBar` und `NavigationRail` hängen an `material3 1.12.0-alpha03`, einer Vorabversion.
+- Gleiche `NavKey`s in zwei Tabs teilen sich den ViewModel-Speicher (Content-Key), das ist nicht abgesichert.
+- Snackbars und Sheets, die unter der nativen Leiste landen, haben noch keine Lösung in der API.
 
 ## Ergebnis Phase 0 (2026-11-08)
 
