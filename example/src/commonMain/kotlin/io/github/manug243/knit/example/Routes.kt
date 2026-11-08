@@ -1,11 +1,9 @@
 package io.github.manug243.knit.example
 
 import androidx.navigation3.runtime.NavKey
-import androidx.savedstate.serialization.SavedStateConfiguration
 import io.github.manug243.knit.KnitTab
+import io.github.manug243.knit.knitRoutes
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
 
 @Serializable
 sealed interface Route : NavKey {
@@ -30,13 +28,9 @@ enum class AppTab(override val root: NavKey) : KnitTab {
 }
 
 /** Needed so the back stacks can be saved on iOS, where Navigation 3 has no reflection. */
-val RouteSavedStateConfiguration = SavedStateConfiguration {
-    serializersModule = SerializersModule {
-        polymorphic(NavKey::class) {
-            subclass(Route.Home::class, Route.Home.serializer())
-            subclass(Route.Lists::class, Route.Lists.serializer())
-            subclass(Route.Settings::class, Route.Settings.serializer())
-            subclass(Route.Detail::class, Route.Detail.serializer())
-        }
-    }
+val RouteSavedStateConfiguration = knitRoutes {
+    route<Route.Home>()
+    route<Route.Lists>()
+    route<Route.Settings>()
+    route<Route.Detail>()
 }
