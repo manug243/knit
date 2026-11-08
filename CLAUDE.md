@@ -27,7 +27,8 @@ Phasen, Befunde, Risiken, offene Punkte und Status stehen in [docs/PLAN.md](docs
 - Nav3 ist die einzige Quelle der Wahrheit für die Navigation.
 - Ein einziger Compose-Baum. Native Leisten liegen auf iOS als Overlay darüber.
 - Kein Swift beim Nutzer, Einstieg bleibt `ComposeUIViewController { ... }`.
-- Module: `:knit` (Library), `:example` (Multiplatform-Demo), `iosApp` (Xcode-Hülle für das Beispiel).
+- Module: `:knit` (Library), `:example` (Multiplatform-Demo), `:androidApp` (Android-Launcher der Demo, nötig weil
+  AGP 9 `com.android.application` nicht mit dem KMP-Plugin erlaubt), `iosApp` (Xcode-Hülle der Demo).
 - Package `io.github.manug243.knit`, Coordinates `io.github.manug243:knit`.
 - Library mit `explicitApi()`.
 
@@ -62,13 +63,14 @@ KnitScaffold(
 
 ## Befehle
 
-Stand nach Phase 0, auf Windows mit `gradlew.bat`:
+Auf Windows `.\gradlew.bat` statt `./gradlew`:
 
 ```bash
 ./gradlew :knit:desktopTest :knit:testAndroidHostTest
-./gradlew :knit:lint
-./gradlew :example:assembleDebug
+./gradlew :knit:lint :androidApp:lintDebug
+./gradlew :androidApp:assembleDebug
+./gradlew :example:run                  # Demo auf dem Desktop starten
 ./gradlew :knit:iosSimulatorArm64Test   # nur macOS
 ```
 
-Die tatsächlich gültigen Task-Namen werden in Phase 0 geprüft und hier korrigiert.
+Das iOS-Beispiel baut die macOS-CI per `xcodebuild` (`.github/workflows/ci.yml`, Job `ios`).

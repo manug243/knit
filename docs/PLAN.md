@@ -6,11 +6,26 @@ Stand: 2026-11-08
 
 | Phase | Inhalt | Status |
 |---|---|---|
-| 0 | Grundgerüst | offen |
+| 0 | Grundgerüst | Windows-Teil gebaut und getestet, iOS-Teil noch ungeprüft (CI läuft erst nach dem ersten Push) |
 | 1 | Tabs | offen |
 | 2 | Back und Top-Bar | offen |
 | 3 | Veröffentlichung | offen |
 | 4 | `UINavigationController`-Backend (experimentell) | offen |
+
+## Ergebnis Phase 0 (2026-11-08)
+
+Gewählte Versionen, gegen Maven Central geprüft: CMP 1.12.2 (weiterhin letzte stabile, 1.13.0 steht bei beta02), Kotlin
+2.3.21, AGP 9.2.1, Gradle 9.4.1, Nav3 1.2.0, lifecycle-viewmodel-navigation3 2.11.0, CMP Material3 1.12.0-alpha03 (für
+1.12 gibt es keine stabile Version). Die iOS-klibs von Nav3, Lifecycle und Compose sind mit Kotlin 2.2.20 gebaut.
+
+Abweichung vom Auftrag: Zusätzlich zu `:example` gibt es `:androidApp`, weil AGP 9 `com.android.application` nicht
+zusammen mit dem KMP-Plugin erlaubt. `:example` enthält den gemeinsamen Code, `:androidApp` nur die Activity.
+
+Geprüft unter Windows: `:knit:desktopTest`, `:knit:testAndroidHostTest`, `:knit:lint`, `:example:compileKotlinDesktop`,
+`:androidApp:lintDebug`, `:androidApp:assembleDebug`.
+
+Ungeprüft: alles zu iOS (Kompilieren der iOS-Quellen, `:knit:iosSimulatorArm64Test`, `xcodebuild`, Screenshots), der
+Release-Workflow und die Workflows selbst. Die Demo wurde gebaut, aber nicht auf einem Gerät oder Emulator gestartet.
 
 ## Ziel
 
