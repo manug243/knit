@@ -7,8 +7,8 @@ Stand: 2026-11-08
 | Phase | Inhalt | Status |
 |---|---|---|
 | 0 | Grundgerüst | gebaut und getestet, iOS über die macOS-CI (Xcode 26) grün |
-| 1 | Tabs | in Arbeit: `KnitNavigator` und `KnitScaffold` gebaut, auf Desktop getestet und unter Xcode 26 kompiliert (CI grün), Verhalten auf iOS und Android-Gerät ungeprüft |
-| 2 | Back und Top-Bar | offen |
+| 1 | Tabs | gebaut und getestet: Navigator, Scaffold, Glass-`UITabBar`. Auf dem iPhone (iOS 26.2, AltStore) von Manuel angesehen: Glass, Tab-Wechsel, Detail, Swipe-Back laufen. Android-Gerät ungeprüft |
+| 2 | Back und Top-Bar | in Arbeit (Branch `feature/top-bar`): `topBar`-Parameter in `KnitScaffold`, Material-`TopAppBar` auf Android/Desktop (Desktop-Tests grün), `UINavigationBar`-Overlay auf iOS geschrieben, aber noch nicht unter Xcode kompiliert und nicht auf dem Gerät gesehen |
 | 3 | Veröffentlichung | offen |
 | 4 | `UINavigationController`-Backend (experimentell) | offen |
 

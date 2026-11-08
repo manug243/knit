@@ -50,4 +50,10 @@ xcrun simctl launch "$device" "$(plist CFBundleIdentifier)"
 # Give the first Compose frame time to render on a cold simulator.
 sleep 20
 xcrun simctl io "$device" screenshot "$out/launch.png"
+
+# Second start straight on a detail screen, which shows the native navigation bar with the back button.
+xcrun simctl terminate "$device" "$(plist CFBundleIdentifier)"
+xcrun simctl launch "$device" "$(plist CFBundleIdentifier)" -knit-detail
+sleep 20
+xcrun simctl io "$device" screenshot "$out/detail.png"
 xcrun simctl shutdown "$device"
