@@ -7,10 +7,21 @@ Stand: 2026-11-08
 | Phase | Inhalt | Status |
 |---|---|---|
 | 0 | Grundgerüst | gebaut und getestet, iOS über die macOS-CI (Xcode 26) grün |
-| 1 | Tabs | offen |
+| 1 | Tabs | begonnen: Glass-Spike belegt (Screenshot aus der macOS-CI), Navigator und Scaffold offen |
 | 2 | Back und Top-Bar | offen |
 | 3 | Veröffentlichung | offen |
 | 4 | `UINavigationController`-Backend (experimentell) | offen |
+
+## Ergebnis Glass-Spike (2026-11-08)
+
+Der Spike (`example/src/iosMain/.../SpikeTabBar.kt`) kompiliert unter Xcode 26 und läuft im Simulator (CI-Lauf von
+PR 3, iOS-Job grün). Der Screenshot zeigt einen schwebenden Kapsel-Tabbar mit hervorgehobenem Auswahl-Pill, durch den
+der Compose-Inhalt unscharf durchscheint (Text eines Streifens hinter der Leiste). Das ist das Liquid-Glass-Aussehen,
+und es entsteht mit einem Stock-`UITabBar` ohne eigene Appearance-Konfiguration über einem einzigen Compose-Baum.
+
+Nicht belegt, weil nur ein statischer Screenshot vorliegt: Verhalten beim Scrollen (Brechung, Minimieren), Tippen und
+Wechseln der Tabs, Rotation, iPad, Tastatur. Die feste Höhe von 49 pt plus Inset passt im Screenshot, wird aber in
+Phase 1 zur Laufzeit gemessen. Das Gefühl muss weiterhin jemand auf einem Gerät testen.
 
 ## Ergebnis Phase 0 (2026-11-08)
 
