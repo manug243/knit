@@ -6,7 +6,7 @@ Stand: 2026-11-08
 
 | Phase | Inhalt | Status |
 |---|---|---|
-| 0 | Grundgerüst | Windows-Teil gebaut und getestet, iOS-Teil noch ungeprüft (CI läuft erst nach dem ersten Push) |
+| 0 | Grundgerüst | gebaut und getestet, iOS über die macOS-CI (Xcode 26) grün |
 | 1 | Tabs | offen |
 | 2 | Back und Top-Bar | offen |
 | 3 | Veröffentlichung | offen |
@@ -26,8 +26,9 @@ zusammen mit dem KMP-Plugin erlaubt. `:example` enthält den gemeinsamen Code, `
 Geprüft unter Windows: `:knit:desktopTest`, `:knit:testAndroidHostTest`, `:knit:lint`, `:example:compileKotlinDesktop`,
 `:androidApp:lintDebug`, `:androidApp:assembleDebug`.
 
-Ungeprüft: alles zu iOS (Kompilieren der iOS-Quellen, `:knit:iosSimulatorArm64Test`, `xcodebuild`, Screenshots), der
-Release-Workflow und die Workflows selbst. Die Demo wurde gebaut, aber nicht auf einem Gerät oder Emulator gestartet.
+Geprüft über die macOS-CI (Xcode 26, Commit `cca5f82`): `:knit:iosSimulatorArm64Test`, `xcodebuild` des iOS-Beispiels,
+Start im Simulator mit Screenshot. Seitdem läuft der iOS-Job nur noch bei PRs von `develop` nach `main`. Ungeprüft: der
+Release-Workflow und die Android-Demo, die gebaut, aber nicht auf einem Gerät oder Emulator gestartet wurde.
 
 ## Ziel
 
