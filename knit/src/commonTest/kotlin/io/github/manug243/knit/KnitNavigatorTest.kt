@@ -1,0 +1,131 @@
+package io.github.manug243.knit
+
+import androidx.navigation3.runtime.NavKey
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+
+private data class Screen(val name: String) : NavKey
+
+private enum class TestTab(override val root: NavKey) : KnitTab {
+    Home(Screen("home")),
+    Search(Screen("search")),
+    Settings(Screen("settings")),
+}
+
+class KnitNavigatorTest {
+    private fun navigator(initial: TestTab = TestTab.Home): KnitNavigator<TestTab> =
+        KnitNavigator(
+            tabs = TestTab.entries,
+            stacks = TestTab.entries.associateWith { mutableListOf(it.root) },
+            initial = initial,
+        )
+
+    @Test
+    fun startsAtHomeRoot() {
+        val navigator = navigator()
+        assertEquals(TestTab.Home, navigator.currentTab)
+        assertTrue(navigator.isAtTabRoot)
+        assertEquals(listOf<NavKey>(Screen("home")), navigator.currentBackStack)
+    }
+
+    @Test
+    fun navigateLeavesTabRoot() {
+        val navigator = navigator()
+        navigator.navigate(Screen("detail"))
+        assertFalse(navigator.isAtTabRoot)
+        assertEquals(listOf<NavKey>(Screen("home"), Screen("detail")), navigator.currentBackStack)
+    }
+
+    @Test
+    fun selectingOtherTabKeepsStacks() {
+        val navigator = navigator()
+        navigator.navigate(Screen("detail"))
+        navigator.select(TestTab.Search)
+        assertEquals(TestTab.Search, navigator.currentTab)
+        assertTrue(navigator.isAtTabRoot)
+        navigator.select(TestTab.Home)
+        assertEquals(listOf<NavKey>(Screen("home"), Screen("detail")), navigator.currentBackStack)
+    }
+
+    @Test
+    fun selectingCurrentTabPopsToRoot() {
+        val navigator = navigator()
+        navigator.navigate(Screen("a"))
+        navigator.navigate(Screen("b"))
+        navigator.select(TestTab.Home)
+        assertEquals(TestTab.Home, navigator.currentTab)
+        assertEquals(listOf<NavKey>(Screen("home")), navigator.currentBackStack)
+    }
+
+    @Test
+    fun backPopsCurrentStack() {
+        val navigator = navigator()
+        navigator.navigate(Screen("detail"))
+        assertTrue(navigator.back())
+        assertTrue(navigator.isAtTabRoot)
+        assertEquals(TestTab.Home, navigator.currentTab)
+    }
+
+    @Test
+    fun backFromOtherTabRootReturnsToHome() {
+        val navigator = navigator()
+        navigator.select(TestTab.Settings)
+        assertTrue(navigator.back())
+        assertEquals(TestTab.Home, navigator.currentTab)
+    }
+
+    @Test
+    fun backFromOtherTabPopsBeforeReturningHome() {
+        val navigator = navigator()
+        navigator.select(TestTab.Search)
+        navigator.navigate(Screen("result"))
+        assertTrue(navigator.back())
+        assertEquals(TestTab.Search, navigator.currentTab)
+        assertTrue(navigator.back())
+        assertEquals(TestTab.Home, navigator.currentTab)
+    }
+
+    @Test
+    fun backAtHomeRootIsNotConsumed() {
+        val navigator = navigator()
+        assertFalse(navigator.back())
+        assertEquals(TestTab.Home, navigator.currentTab)
+        assertEquals(listOf<NavKey>(Screen("home")), navigator.currentBackStack)
+    }
+
+    @Test
+    fun popNeverRemovesRoot() {
+        val navigator = navigator()
+        assertFalse(navigator.pop())
+        assertEquals(1, navigator.currentBackStack.size)
+    }
+
+    @Test
+    fun inactiveTabKeepsItsStackWhenBackReturnsHome() {
+        val navigator = navigator()
+        navigator.select(TestTab.Search)
+        navigator.navigate(Screen("result"))
+        navigator.select(TestTab.Settings)
+        assertTrue(navigator.back())
+        assertEquals(TestTab.Home, navigator.currentTab)
+        assertEquals(listOf<NavKey>(Screen("search"), Screen("result")), navigator.backStack(TestTab.Search))
+    }
+
+    @Test
+    fun canStartOnAnotherTab() {
+        val navigator = navigator(initial = TestTab.Search)
+        assertEquals(TestTab.Search, navigator.currentTab)
+        assertTrue(navigator.back())
+        assertEquals(TestTab.Home, navigator.currentTab)
+    }
+
+    @Test
+    fun rejectsEmptyTabList() {
+        assertFailsWith<IllegalArgumentException> {
+            KnitNavigator<TestTab>(tabs = emptyList(), stacks = emptyMap(), initial = TestTab.Home)
+        }
+    }
+}
