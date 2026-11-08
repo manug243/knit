@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +30,9 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
 import platform.CoreGraphics.CGSizeMake
 import platform.UIKit.UIImage
+import platform.UIKit.UINavigationBar
+import platform.UIKit.UINavigationBarDelegateProtocol
+import platform.UIKit.UINavigationItem
 import platform.UIKit.UITabBar
 import platform.UIKit.UITabBarDelegateProtocol
 import platform.UIKit.UITabBarItem
@@ -36,6 +40,9 @@ import platform.darwin.NSObject
 
 /** Height of a classic tab bar without the home indicator region. */
 private val ClassicTabBarHeight = 49.dp
+
+/** Height of a classic navigation bar without the status bar region. */
+private val ClassicNavigationBarHeight = 44.dp
 
 /**
  * iOS chrome: the content fills the screen in one Compose tree and a stock [UITabBar] sits above it
@@ -51,6 +58,7 @@ internal actual fun KnitPlatformShell(
     selectedIndex: Int,
     barVisible: Boolean,
     onSelect: (Int) -> Unit,
+    topBar: ShellTopBar?,
     modifier: Modifier,
     content: @Composable () -> Unit,
 ) {
@@ -62,6 +70,20 @@ internal actual fun KnitPlatformShell(
     val coveredHeight by animateDpAsState(if (barVisible) barHeight else 0.dp)
     val slideOut by animateDpAsState(if (barVisible) 0.dp else barHeight)
 
+    // Without a navigation controller the bar knows nothing about the status bar and lays its content
+    // out at the top of its own frame. So the frame is exactly the 44 dp of content and sits below
+    // the status bar. While hidden, the bar slides up past the screen edge.
+    val statusBarInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navBarHeight = ClassicNavigationBarHeight
+    val navBarTop = statusBarInset
+    val shownTopBar = remember { LastValue<ShellTopBar>() }
+    if (topBar != null) shownTopBar.value = topBar
+    val coveredTop by animateDpAsState(if (topBar != null) ClassicNavigationBarHeight else 0.dp)
+    val slideUp by animateDpAsState(if (topBar != null) 0.dp else navBarTop + navBarHeight)
+    // Same as the tab bar delegate: UINavigationBar holds it weakly.
+    val navDelegate = remember { KnitNavigationBarDelegate { shownTopBar.value?.onBack?.invoke() } }
+    val navSynchronizer = remember { NavigationBarSynchronizer() }
+
     val currentOnSelect by rememberUpdatedState(onSelect)
     // UITabBar references its delegate weakly, so the composition has to keep it alive.
     // UIKit calls it on user taps only, not when selectedItem is set from code, so there is no loop.
@@ -70,8 +92,22 @@ internal actual fun KnitPlatformShell(
 
     Box(modifier = modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
-            ProvideKnitContentPadding(PaddingValues(bottom = coveredHeight), content)
+            ProvideKnitContentPadding(PaddingValues(top = coveredTop, bottom = coveredHeight), content)
         }
+        UIKitView(
+            factory = { UINavigationBar().apply { this.delegate = navDelegate } },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .height(navBarHeight)
+                .offset { IntOffset(x = 0, y = (navBarTop - slideUp).roundToPx()) },
+            update = { bar -> shownTopBar.value?.let { navSynchronizer.sync(bar, it) } },
+            properties = UIKitInteropProperties(
+                interactionMode = UIKitInteropInteractionMode.NonCooperative,
+                isNativeAccessibilityEnabled = true,
+                placedAsOverlay = true,
+            ),
+        )
         UIKitView(
             factory = { UITabBar().apply { this.delegate = delegate } },
             modifier = Modifier
@@ -117,6 +153,39 @@ private class TabBarSynchronizer {
         if (target != null && bar.selectedItem != target) {
             bar.selectedItem = target
         }
+    }
+}
+
+/**
+ * Keeps the navigation items in line with the Compose state. A bar with two items shows the system
+ * back button, whose label is the title of the first one.
+ */
+@OptIn(ExperimentalForeignApi::class)
+private class NavigationBarSynchronizer {
+    private var signature: Pair<String, String?>? = null
+
+    fun sync(bar: UINavigationBar, topBar: ShellTopBar) {
+        val newSignature = topBar.title to topBar.backTitle
+        if (newSignature == signature) return
+        val items = buildList {
+            topBar.backTitle?.let { add(UINavigationItem(title = it)) }
+            add(UINavigationItem(title = topBar.title))
+        }
+        bar.setItems(items, animated = false)
+        signature = newSignature
+    }
+}
+
+/**
+ * Receives taps on the system back button. The pop is refused on purpose: Navigation 3 owns the
+ * back stack, and the bar follows once the stack has changed.
+ */
+private class KnitNavigationBarDelegate(
+    private val onBack: () -> Unit,
+) : NSObject(), UINavigationBarDelegateProtocol {
+    override fun navigationBar(navigationBar: UINavigationBar, shouldPopItem: UINavigationItem): Boolean {
+        onBack()
+        return false
     }
 }
 
