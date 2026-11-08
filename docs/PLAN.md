@@ -7,8 +7,8 @@ Stand: 2026-11-08
 | Phase | Inhalt | Status |
 |---|---|---|
 | 0 | Grundgerüst | gebaut und getestet, iOS über die macOS-CI (Xcode 26) grün |
-| 1 | Tabs | in Arbeit: `KnitNavigator` und `KnitScaffold` gebaut, auf Desktop getestet und unter Xcode 26 kompiliert (CI grün), Verhalten auf iOS und Android-Gerät ungeprüft |
-| 2 | Back und Top-Bar | offen |
+| 1 | Tabs | gebaut und getestet: Navigator, Scaffold, Glass-`UITabBar`. Auf dem iPhone (iOS 26.2, AltStore) von Manuel angesehen: Glass, Tab-Wechsel, Detail, Swipe-Back laufen. Android-Gerät ungeprüft |
+| 2 | Back und Top-Bar | Kern fertig (Branch `feature/top-bar`): `topBar`-Parameter, Material-`TopAppBar`, `UINavigationBar`-Overlay mit System-Zurück-Button, `knitRoutes`-Helfer. iOS-CI grün, auf iPhone und Android-Gerät von Manuel angesehen. Offen: Actions, Tab-Animation, Snackbars/Sheets, Titel-Updates, siehe unten |
 | 3 | Veröffentlichung | offen |
 | 4 | `UINavigationController`-Backend (experimentell) | offen |
 
@@ -105,6 +105,19 @@ ist ein kurzer Spike im `:example`, der belegt, dass Glass über Compose-Inhalt 
 
 **Phase 2, Back und Top-Bar:** `UINavigationBar` als Overlay mit Glass-Back-Button und Actions, iOS-typische Übergänge
 und Swipe-Back über den Compose-Back-Gesture (`predictivePopTransitionSpec`). Android: Top-App-Bar und Predictive Back.
+
+Stand Phase 2 (2026-11-08): Gebaut sind `KnitScaffold(topBar = { key -> KnitTopBar(title) })` (Titel pro `NavKey`, Zurück-Button
+unterhalb des Tab-Starts, ruft `navigator.back()`), die Material-Leiste und auf iOS ein `UINavigationBar` als Overlay.
+Ohne `UINavigationController` kennt der Bar den Statusbereich nicht und legt seinen Inhalt am Rand der eigenen Frame ab.
+Der erste Entwurf (Frame bis zum Bildschirmrand) setzte den Button in die Statusleiste, wie der CI-Screenshot zeigte.
+Jetzt ist die Frame genau 44 dp hoch und sitzt unter der Statusleiste. `LocalKnitContentPadding` hat einen Top-Wert (ohne
+Statusleiste). Dazu `knitRoutes { route<T>() }` für die `SavedStateConfiguration`. Swipe-Back läuft über die
+Compose-Geste, von Manuel auf dem iPhone bestätigt. Die CI startet die App zusätzlich direkt auf der Detailansicht
+(`-knit-detail`) und legt `detail.png` ab.
+
+Noch offen in Phase 2: Actions rechts in der Leiste, Titel-Updates aus dem Screen heraus, Tab-Wechsel-Animation, Lösung
+für Snackbars und Sheets unter der nativen Leiste, mitgleitende Leiste beim Swipe-Back (springt wahrscheinlich, ungeprüft),
+Predictive Back auf Android, Ersatz für den veralteten `BackHandler`.
 
 **Phase 3, Veröffentlichung:** README im Skeleton-Stil mit GIFs, Release 0.1.0, danach WeList als Praxistest.
 
