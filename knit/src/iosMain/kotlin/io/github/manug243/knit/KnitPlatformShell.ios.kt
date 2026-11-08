@@ -29,9 +29,6 @@ import androidx.compose.ui.viewinterop.UIKitView
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
 import platform.CoreGraphics.CGSizeMake
-import platform.UIKit.UIBarPosition
-import platform.UIKit.UIBarPositionTopAttached
-import platform.UIKit.UIBarPositioningProtocol
 import platform.UIKit.UIImage
 import platform.UIKit.UINavigationBar
 import platform.UIKit.UINavigationBarDelegateProtocol
@@ -73,13 +70,16 @@ internal actual fun KnitPlatformShell(
     val coveredHeight by animateDpAsState(if (barVisible) barHeight else 0.dp)
     val slideOut by animateDpAsState(if (barVisible) 0.dp else barHeight)
 
-    // The navigation bar reaches under the status bar, its own content is 44 dp high below it.
+    // Without a navigation controller the bar knows nothing about the status bar and lays its content
+    // out at the top of its own frame. So the frame is exactly the 44 dp of content and sits below
+    // the status bar. While hidden, the bar slides up past the screen edge.
     val statusBarInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val navBarHeight = ClassicNavigationBarHeight + statusBarInset
+    val navBarHeight = ClassicNavigationBarHeight
+    val navBarTop = statusBarInset
     val shownTopBar = remember { LastValue<ShellTopBar>() }
     if (topBar != null) shownTopBar.value = topBar
     val coveredTop by animateDpAsState(if (topBar != null) ClassicNavigationBarHeight else 0.dp)
-    val slideUp by animateDpAsState(if (topBar != null) 0.dp else navBarHeight)
+    val slideUp by animateDpAsState(if (topBar != null) 0.dp else navBarTop + navBarHeight)
     // Same as the tab bar delegate: UINavigationBar holds it weakly.
     val navDelegate = remember { KnitNavigationBarDelegate { shownTopBar.value?.onBack?.invoke() } }
     val navSynchronizer = remember { NavigationBarSynchronizer() }
@@ -100,7 +100,7 @@ internal actual fun KnitPlatformShell(
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .height(navBarHeight)
-                .offset { IntOffset(x = 0, y = -slideUp.roundToPx()) },
+                .offset { IntOffset(x = 0, y = (navBarTop - slideUp).roundToPx()) },
             update = { bar -> shownTopBar.value?.let { navSynchronizer.sync(bar, it) } },
             properties = UIKitInteropProperties(
                 interactionMode = UIKitInteropInteractionMode.NonCooperative,
@@ -187,9 +187,6 @@ private class KnitNavigationBarDelegate(
         onBack()
         return false
     }
-
-    // Lets the bar's background extend under the status bar like in a navigation controller.
-    override fun positionForBar(bar: UIBarPositioningProtocol): UIBarPosition = UIBarPositionTopAttached
 }
 
 private class KnitTabBarDelegate(
