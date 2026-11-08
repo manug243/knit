@@ -9,6 +9,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
@@ -122,6 +123,48 @@ class KnitScaffoldTest {
         waitForIdle()
         onNodeWithText("page a").assertExists()
         onNodeWithText("Tab A").assertExists()
+    }
+
+    @Test
+    fun topBarShowsTitleAndBackPopsScreen() = runComposeUiTest {
+        lateinit var navigator: KnitNavigator<ScaffoldTab>
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            navigator = nav
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider {
+                    entry<Page> { page ->
+                        Button(onClick = { nav.navigate(Page("${page.name}-detail")) }) { Text("open ${page.name}") }
+                    }
+                },
+                topBar = { key -> if (key is Page && key.name.endsWith("-detail")) KnitTopBar("title ${key.name}") else null },
+            )
+        }
+        onNodeWithText("title a-detail").assertDoesNotExist()
+        onNodeWithText("open a").performClick()
+        waitForIdle()
+        onNodeWithText("title a-detail").assertExists()
+        onNodeWithContentDescription("Back").assertExists()
+
+        onNodeWithContentDescription("Back").performClick()
+        waitForIdle()
+        onNodeWithText("title a-detail").assertDoesNotExist()
+        onNodeWithText("open a").assertExists()
+        runOnIdle { assertEquals(true, navigator.isAtTabRoot) }
+    }
+
+    @Test
+    fun noTopBarWithoutConfig() = runComposeUiTest {
+        show {}
+        onNodeWithText("open a").performClick()
+        waitForIdle()
+        onNodeWithText("page a-detail").assertExists()
+        onNodeWithContentDescription("Back").assertDoesNotExist()
     }
 
     @Test
