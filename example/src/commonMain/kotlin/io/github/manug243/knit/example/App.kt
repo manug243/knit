@@ -15,10 +15,10 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import io.github.manug243.knit.KnitScaffold
+import io.github.manug243.knit.KnitTopBar
 import io.github.manug243.knit.LocalKnitContentPadding
 import io.github.manug243.knit.rememberKnitNavigator
 
@@ -43,9 +44,13 @@ private const val StripeCount = 40
  * visible whether the native bar on iOS floats over them.
  */
 @Composable
-fun App() {
+fun App(openDetailOnStart: Boolean = false) {
     MaterialTheme {
         val navigator = rememberKnitNavigator(AppTab.entries, RouteSavedStateConfiguration)
+        // Lets the CI take a screenshot of a screen with the top bar without tapping through the app.
+        LaunchedEffect(openDetailOnStart) {
+            if (openDetailOnStart && navigator.isAtTabRoot) navigator.navigate(Route.Detail("Home", 0))
+        }
 
         KnitScaffold(
             navigator = navigator,
@@ -58,7 +63,13 @@ fun App() {
                 entry<Route.Home> { StripeScreen("Home") { navigator.navigate(Route.Detail("Home", it)) } }
                 entry<Route.Lists> { StripeScreen("Lists") { navigator.navigate(Route.Detail("Lists", it)) } }
                 entry<Route.Settings> { StripeScreen("Settings") { navigator.navigate(Route.Detail("Settings", it)) } }
-                entry<Route.Detail> { route -> DetailScreen(route, onBack = { navigator.back() }) }
+                entry<Route.Detail> { route -> DetailScreen(route) }
+            },
+            topBar = { key ->
+                when (key) {
+                    is Route.Detail -> KnitTopBar("${key.tab} ${key.index}")
+                    else -> null
+                }
             },
         )
     }
@@ -92,16 +103,24 @@ private fun StripeScreen(title: String, onOpen: (Int) -> Unit) {
 }
 
 @Composable
-private fun DetailScreen(route: Route.Detail, onBack: () -> Unit) {
+private fun DetailScreen(route: Route.Detail) {
+    val system = WindowInsets.safeDrawing.asPaddingValues()
+    val layoutDirection = LocalLayoutDirection.current
+    val chrome = LocalKnitContentPadding.current
+    // The navigation bar floats over the content on iOS, so its height comes on top of the system insets.
+    val padding = PaddingValues(
+        start = system.calculateStartPadding(layoutDirection),
+        top = system.calculateTopPadding() + chrome.calculateTopPadding(),
+        end = system.calculateEndPadding(layoutDirection),
+        bottom = system.calculateBottomPadding(),
+    )
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(StripeColors[route.index % StripeColors.size])
-            .padding(WindowInsets.safeDrawing.asPaddingValues()),
+            .padding(padding),
         contentAlignment = Alignment.Center,
     ) {
-        Button(onClick = onBack) {
-            Text("${route.tab} ${route.index}: back")
-        }
+        Text("${route.tab} ${route.index}", color = Color.Black)
     }
 }
