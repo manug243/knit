@@ -190,6 +190,23 @@ Unterschiede im Verhalten: knit blendet die Leiste bei offener Tastatur aus und 
 
 **Phase 4, experimentell:** `UINavigationController`-Backend, nur falls Phase 2 sich nicht gut genug anfühlt.
 
+## Theming auf Android, Desktop und Web (2026-11-09)
+
+Entscheidung: iOS bleibt immer die native Leiste mit dem Look des Systems. Auf Android, Desktop und Web soll die Anwendung
+ihr eigenes Design anwenden können, der Material-Standard ist nur der Ausgangspunkt. Dafür hat `KnitScaffold` drei
+Parameter, die iOS ignoriert:
+- `colors: KnitColors` (Standard `KnitDefaults.colors()`, folgt dem umgebenden `MaterialTheme`, einzeln überschreibbar) für
+  Tab-Bar, Rail und Top-Bar.
+- `tabBar: @Composable (KnitTabBarState) -> Unit` ersetzt die Material-Tab-Bar. Der State liefert die Tabs mit Titel, Icon,
+  Auswahl und `onClick` und sagt, ob eine Leiste unten oder eine Rail (ab 600 dp) gezeichnet wird. Die Navigationsleisten-
+  Insets behandelt die eigene Leiste selbst.
+- `topBarContent: @Composable (KnitTopBarState) -> Unit` ersetzt die Material-Top-Bar. Der State liefert Titel, Actions,
+  ob ein Zurück-Button gezeigt wird und `onBack`. Die Statusleisten-Insets behandelt die eigene Leiste selbst.
+
+Dazu ein `wasmJs`-Target, damit Apps mit Web-Ziel (WeList) knit einbinden können. Es nutzt die Material-Leisten, der
+Web-Test ist nur ein Kompilieren (`:knit:compileKotlinWasmJs`), die CI führt es aus. Ungeprüft: Verhalten im Browser,
+iOS-Build mit den geänderten Signaturen.
+
 ## Befunde (Stand 2026-11-08, aus dem Auftrag)
 
 **knit:** unverändertes KMP-Wizard-Template (`composeApp`, `iosApp`), `main` und `develop` identisch. Versionen dort:

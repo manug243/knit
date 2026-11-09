@@ -28,7 +28,7 @@ jobs:
       - name: Install Android SDK platform
         run: sdkmanager "platforms;android-37.0"
       - name: Verify library and example
-        run: ./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:lint :example:compileKotlinDesktop :androidApp:lintDebug :androidApp:assembleDebug
+        run: ./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:lint :knit:compileKotlinWasmJs :example:compileKotlinDesktop :androidApp:lintDebug :androidApp:assembleDebug
 
   ios:
     # iOS only runs when develop is promoted to main.

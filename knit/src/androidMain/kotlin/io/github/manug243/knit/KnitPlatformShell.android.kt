@@ -10,6 +10,7 @@ internal actual fun KnitPlatformShell(
     barVisible: Boolean,
     onSelect: (Int) -> Unit,
     topBar: ShellTopBar?,
+    style: ShellStyle,
     modifier: Modifier,
     content: @Composable () -> Unit,
-) = MaterialShell(items, selectedIndex, barVisible, onSelect, topBar, modifier, content)
+) = MaterialShell(items, selectedIndex, barVisible, onSelect, topBar, style, modifier, content)
