@@ -31,7 +31,7 @@ kotlin {
             api(libs.navigation3.ui)
             api(libs.savedstate)
             implementation(libs.compose.mp.animation)
-            implementation(libs.compose.mp.ui.backhandler)
+            implementation(libs.navigationevent.compose)
             implementation(libs.compose.mp.foundation)
             implementation(libs.compose.mp.material3)
             implementation(libs.lifecycle.viewmodel.navigation3)

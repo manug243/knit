@@ -14,13 +14,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -55,7 +56,6 @@ public val LocalKnitContentPadding: androidx.compose.runtime.ProvidableCompositi
  * Below a tab's start screen the bar also shows a back button that pops the screen. It is called
  * with the top of the current tab's stack, so it follows navigation and can read the key's arguments.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 public fun <T : KnitTab> KnitScaffold(
     navigator: KnitNavigator<T>,
@@ -104,11 +104,12 @@ public fun <T : KnitTab> KnitScaffold(
     }
 
     // Deeper screens are popped by NavDisplay. On a tab's start screen back leads to the home tab.
-    // BackHandler is deprecated in favor of NavigationEventHandler, which needs more setup.
-    @Suppress("DEPRECATION")
-    BackHandler(enabled = navigator.isAtTabRoot && navigator.currentTab != navigator.homeTab) {
-        navigator.back()
-    }
+    val backState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+    NavigationBackHandler(
+        state = backState,
+        isBackEnabled = navigator.isAtTabRoot && navigator.currentTab != navigator.homeTab,
+        onBackCompleted = { navigator.back() },
+    )
 
     val hideRequests = remember { TabBarHideRequests() }
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
