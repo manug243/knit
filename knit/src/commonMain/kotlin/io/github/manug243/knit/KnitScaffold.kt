@@ -1,5 +1,7 @@
 package io.github.manug243.knit
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
@@ -23,6 +25,8 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+
+private const val TabFadeMillis = 180
 
 /**
  * Space that knit's chrome covers. Screens should pad their scrollable content by it, for example
@@ -107,6 +111,7 @@ public fun <T : KnitTab> KnitScaffold(
         navigator.back()
     }
 
+    val hideRequests = remember { TabBarHideRequests() }
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val barItems = items.map { ShellItem(it.title, it.icon) }
     val selectedIndex = items.indexOfFirst { it.tab == navigator.currentTab }
@@ -126,16 +131,20 @@ public fun <T : KnitTab> KnitScaffold(
     KnitPlatformShell(
         items = barItems,
         selectedIndex = selectedIndex,
-        barVisible = navigator.isAtTabRoot && !imeVisible,
+        barVisible = navigator.isAtTabRoot && !imeVisible && hideRequests.count == 0,
         onSelect = { index -> navigator.select(items[index].tab) },
         topBar = shellTopBar,
         modifier = modifier,
     ) {
-        CompositionLocalProvider(LocalKnitTopBarOverrides provides overrides) {
-            // Keyed by tab so that switching tabs swaps the content without a push or pop animation.
-            key(navigator.currentTab) {
+        CompositionLocalProvider(
+            LocalKnitTopBarOverrides provides overrides,
+            LocalKnitTabBarHideRequests provides hideRequests,
+        ) {
+            // Switching tabs fades between the two screens, like the system tab bars do. It is not a
+            // push or pop, so the content of a tab never slides.
+            Crossfade(targetState = navigator.currentTab, animationSpec = tween(TabFadeMillis)) { tab ->
                 NavDisplay(
-                    entries = entriesByTab.getValue(navigator.currentTab),
+                    entries = entriesByTab.getValue(tab),
                     onBack = { navigator.back() },
                 )
             }
