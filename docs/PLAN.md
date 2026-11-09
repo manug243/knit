@@ -140,6 +140,14 @@ mit `setItems(animated = true)` und die Leiste blendet nur aus, wenn ein Screen 
 nach unten zu fahren, beide schalten die Touches im ausgeblendeten Zustand ab. Offen: ob `setItems(animated)` auf dem
 Gerät wie ein Push und Pop wirkt und ob die Tab-Bar zeitlich zum Seitenwechsel passt.
 
+Back-Handling (Branch `feature/back-handling`, lokal auf Desktop und Android-Host gebaut und getestet, Gerät und iOS
+offen): Der veraltete `BackHandler` (ui-backhandler) ist durch `NavigationBackHandler` aus `navigationevent-compose` 1.1.0
+ersetzt, die Abhängigkeit war schon transitiv auf dem iOS-Klassenpfad. In der Android-Demo ist
+`android:enableOnBackInvokedCallback="true"` gesetzt, damit die System-Animation für Predictive Back greift. `NavDisplay`
+animiert das Zurück auf einer Detailseite selbst. Der Wechsel von einem Tab-Start zurück zum Home-Tab läuft über den
+Handler und überblendet erst beim Abschluss der Geste, ohne Fortschrittsanimation. Ungeprüft: Zurück auf einem
+Android-Gerät mit Android 14 oder neuer, und der iOS-Build mit der neuen Abhängigkeit.
+
 Noch offen in Phase 2: Predictive Back auf Android, Ersatz für den veralteten `BackHandler`. Ungeprüft: Crossfade
 zwischen Tabs und das Verhalten der Sheets mit `KnitTabBarHidden()` auf einem Gerät.
 
