@@ -134,6 +134,12 @@ auch per Swipe-Back, wieder ein. Ungeklärt: ob die Leisten dabei dem Finger fol
 wurde, nicht mehr, die Leiste blieb leer. Der CI-Screenshot übersah das, weil er die Detailseite direkt beim Start öffnet.
 Fix: die Funktion fängt `topBar` ein und läuft damit bei jeder Änderung.
 
+Animation der nativen Leisten (Branch `feature/native-bar-animation`, iOS ungebaut und ungesehen): Das Wegfahren nach
+oben und unten war nicht iOS-typisch. Jetzt bleibt die Navigationsleiste fest unter der Statusleiste, ihre Items wechseln
+mit `setItems(animated = true)` und die Leiste blendet nur aus, wenn ein Screen keine hat. Die Tab-Bar blendet aus statt
+nach unten zu fahren, beide schalten die Touches im ausgeblendeten Zustand ab. Offen: ob `setItems(animated)` auf dem
+Gerät wie ein Push und Pop wirkt und ob die Tab-Bar zeitlich zum Seitenwechsel passt.
+
 Noch offen in Phase 2: Predictive Back auf Android, Ersatz für den veralteten `BackHandler`. Ungeprüft: Crossfade
 zwischen Tabs und das Verhalten der Sheets mit `KnitTabBarHidden()` auf einem Gerät.
 
