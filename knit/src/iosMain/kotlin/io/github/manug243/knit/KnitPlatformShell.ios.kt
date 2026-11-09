@@ -103,7 +103,10 @@ internal actual fun KnitPlatformShell(
                 .fillMaxWidth()
                 .height(navBarHeight)
                 .offset { IntOffset(x = 0, y = (navBarTop - slideUp).roundToPx()) },
-            update = { bar -> shownTopBar.value?.let { navSynchronizer.sync(bar, it) } },
+            // The lambda has to capture topBar: a new instance on every change is what makes UIKitView run
+            // update again. Reading only shownTopBar, a plain field, left the bar empty when the screen
+            // was opened after the first frame.
+            update = { bar -> (topBar ?: shownTopBar.value)?.let { navSynchronizer.sync(bar, it) } },
             properties = UIKitInteropProperties(
                 interactionMode = UIKitInteropInteractionMode.NonCooperative,
                 isNativeAccessibilityEnabled = true,
