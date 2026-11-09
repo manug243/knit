@@ -71,7 +71,7 @@ KnitScaffold(
 Auf Windows `.\gradlew.bat` statt `./gradlew`:
 
 ```bash
-./gradlew :knit:desktopTest :knit:testAndroidHostTest
+./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:compileKotlinWasmJs
 ./gradlew :knit:lint :androidApp:lintDebug
 ./gradlew :androidApp:assembleDebug
 ./gradlew :example:run                  # Demo auf dem Desktop starten
