@@ -126,9 +126,14 @@ Danach gebaut (Branch `feature/chrome-extras`, lokal auf Desktop und Android-Hos
   `Modifier.knitContentPadding()` für Dinge am Bildschirmrand wie den `SnackbarHost`. Beides ist nur eine Hilfe, kein
   automatisches Verhalten: Ein `ModalBottomSheet` ohne `KnitTabBarHidden()` liegt auf iOS weiter unter der nativen Leiste.
 
-Noch offen in Phase 2: mitgleitende Leiste beim Swipe-Back (springt wahrscheinlich, ungeprüft), Predictive Back auf
-Android, Ersatz für den veralteten `BackHandler`. Ungeprüft auf iOS: Actions in der Leiste (`UIAction`-Signaturen),
-Crossfade zwischen Tabs, Verhalten der Sheets mit `KnitTabBarHidden()`.
+Auf dem iPhone (iOS 26.2) von Manuel bestätigt: Die Leiste mit Zurück-Button, Titel und Action sitzt, und sie gleitet
+beim Swipe-Back mit (die Vermutung, sie springe, war falsch). Ein erster Fehler zeigte sich nur auf dem Gerät: Die
+`update`-Funktion des `UIKitView` las ein Nicht-State-Feld und lief bei einem Screen, der nach dem ersten Frame geöffnet
+wurde, nicht mehr, die Leiste blieb leer. Der CI-Screenshot übersah das, weil er die Detailseite direkt beim Start öffnet.
+Fix: die Funktion fängt `topBar` ein und läuft damit bei jeder Änderung.
+
+Noch offen in Phase 2: Predictive Back auf Android, Ersatz für den veralteten `BackHandler`. Ungeprüft: Crossfade
+zwischen Tabs und das Verhalten der Sheets mit `KnitTabBarHidden()` auf einem Gerät.
 
 **Phase 3, Veröffentlichung:** README im Skeleton-Stil mit GIFs, Release 0.1.0, danach WeList als Praxistest.
 
