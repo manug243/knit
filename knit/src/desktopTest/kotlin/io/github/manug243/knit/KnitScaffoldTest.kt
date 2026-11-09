@@ -5,6 +5,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -223,6 +224,34 @@ class KnitScaffoldTest {
         waitForIdle()
         onNodeWithText("loaded 1").assertExists()
         onNodeWithText("loaded 0").assertDoesNotExist()
+    }
+
+    @Test
+    fun tabBarHidesWhileRequested() = runComposeUiTest {
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider {
+                    entry<Page> {
+                        var sheet by remember { mutableStateOf(false) }
+                        if (sheet) KnitTabBarHidden()
+                        Button(onClick = { sheet = !sheet }) { Text("toggle sheet") }
+                    }
+                },
+            )
+        }
+        onNodeWithText("Tab A").assertExists()
+        onNodeWithText("toggle sheet").performClick()
+        waitForIdle()
+        onNodeWithText("Tab A").assertDoesNotExist()
+        onNodeWithText("toggle sheet").performClick()
+        waitForIdle()
+        onNodeWithText("Tab A").assertExists()
     }
 
     @Test
