@@ -55,6 +55,14 @@ public val LocalKnitContentPadding: androidx.compose.runtime.ProvidableCompositi
  * @param topBar returns the top bar for the screen of a [NavKey], or null for a screen without one.
  * Below a tab's start screen the bar also shows a back button that pops the screen. It is called
  * with the top of the current tab's stack, so it follows navigation and can read the key's arguments.
+ * @param colors colors of the Material bars on Android, Desktop and Web. The default follows the
+ * surrounding `MaterialTheme`, see [KnitDefaults.colors]. iOS ignores it, its native bars take
+ * their look from the system.
+ * @param tabBar draws the tab bar yourself on Android, Desktop and Web, for example to match an own
+ * design system. It gets the tabs and whether to draw a bottom bar or a side rail, and has to handle
+ * the navigation bar inset itself. iOS ignores it and keeps the native bar.
+ * @param topBarContent draws the top bar yourself on Android, Desktop and Web, from the title and
+ * actions of [topBar]. It has to handle the status bar inset itself. iOS ignores it.
  */
 @Composable
 public fun <T : KnitTab> KnitScaffold(
@@ -63,6 +71,9 @@ public fun <T : KnitTab> KnitScaffold(
     entryProvider: (NavKey) -> NavEntry<NavKey>,
     modifier: Modifier = Modifier,
     topBar: (NavKey) -> KnitTopBar? = { null },
+    colors: KnitColors = KnitDefaults.colors(),
+    tabBar: (@Composable (KnitTabBarState) -> Unit)? = null,
+    topBarContent: (@Composable (KnitTopBarState) -> Unit)? = null,
 ) {
     val items = buildTabItems(tabs)
     require(items.map { it.tab }.toSet() == navigator.tabs.toSet()) {
@@ -134,6 +145,7 @@ public fun <T : KnitTab> KnitScaffold(
         barVisible = navigator.isAtTabRoot && !imeVisible && hideRequests.count == 0,
         onSelect = { index -> navigator.select(items[index].tab) },
         topBar = shellTopBar,
+        style = ShellStyle(colors, tabBar, topBarContent),
         modifier = modifier,
     ) {
         CompositionLocalProvider(
@@ -168,6 +180,7 @@ internal expect fun KnitPlatformShell(
     barVisible: Boolean,
     onSelect: (Int) -> Unit,
     topBar: ShellTopBar?,
+    style: ShellStyle,
     modifier: Modifier,
     content: @Composable () -> Unit,
 )
