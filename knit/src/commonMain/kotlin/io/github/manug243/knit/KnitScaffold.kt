@@ -5,7 +5,12 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -60,6 +65,24 @@ public fun <T : KnitTab> KnitScaffold(
         "The tabs block has to declare exactly the tabs of the navigator: ${navigator.tabs}"
     }
 
+    // Top bars that screens set themselves with KnitTopBarOverride. Dropped once the screen has left
+    // every back stack.
+    val overrides = remember { mutableStateMapOf<NavKey, KnitTopBar>() }
+    // Tells every screen which key it shows, which KnitTopBarOverride needs.
+    val currentEntryProvider by rememberUpdatedState(entryProvider)
+    val keyedEntryProvider: (NavKey) -> NavEntry<NavKey> = remember {
+        { navKey ->
+            val entry = currentEntryProvider(navKey)
+            NavEntry(navKey, contentKey = entry.contentKey, metadata = entry.metadata) {
+                CompositionLocalProvider(LocalKnitEntryKey provides navKey) { entry.Content() }
+            }
+        }
+    }
+    SideEffect {
+        val live = navigator.tabs.flatMapTo(HashSet()) { navigator.backStack(it) }
+        overrides.keys.retainAll(live)
+    }
+
     // Entries of every tab stay decorated, also while the tab is not shown. That keeps the
     // ViewModels and the saved state of an inactive tab alive.
     val entriesByTab = LinkedHashMap<T, List<NavEntry<NavKey>>>()
@@ -71,7 +94,7 @@ public fun <T : KnitTab> KnitScaffold(
                     rememberSaveableStateHolderNavEntryDecorator(),
                     rememberViewModelStoreNavEntryDecorator(),
                 ),
-                entryProvider = entryProvider,
+                entryProvider = keyedEntryProvider,
             )
         }
     }
@@ -88,12 +111,13 @@ public fun <T : KnitTab> KnitScaffold(
     val selectedIndex = items.indexOfFirst { it.tab == navigator.currentTab }
 
     val stack = navigator.currentBackStack
-    val topConfig = stack.lastOrNull()?.let(topBar)
+    val barFor: (NavKey) -> KnitTopBar? = { overrides[it] ?: topBar(it) }
+    val topConfig = stack.lastOrNull()?.let(barFor)
     val shellTopBar = topConfig?.let { config ->
         ShellTopBar(
             title = config.title,
             actions = config.actions,
-            backTitle = if (stack.size > 1) topBar(stack[stack.lastIndex - 1])?.title ?: "Back" else null,
+            backTitle = if (stack.size > 1) barFor(stack[stack.lastIndex - 1])?.title ?: "Back" else null,
             onBack = { navigator.back() },
         )
     }
@@ -106,12 +130,14 @@ public fun <T : KnitTab> KnitScaffold(
         topBar = shellTopBar,
         modifier = modifier,
     ) {
-        // Keyed by tab so that switching tabs swaps the content without a push or pop animation.
-        key(navigator.currentTab) {
-            NavDisplay(
-                entries = entriesByTab.getValue(navigator.currentTab),
-                onBack = { navigator.back() },
-            )
+        CompositionLocalProvider(LocalKnitTopBarOverrides provides overrides) {
+            // Keyed by tab so that switching tabs swaps the content without a push or pop animation.
+            key(navigator.currentTab) {
+                NavDisplay(
+                    entries = entriesByTab.getValue(navigator.currentTab),
+                    onBack = { navigator.back() },
+                )
+            }
         }
     }
 }
