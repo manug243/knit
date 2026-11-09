@@ -62,6 +62,9 @@ internal actual fun KnitPlatformShell(
     barVisible: Boolean,
     onSelect: (Int) -> Unit,
     topBar: ShellTopBar?,
+    // Colors and custom bars only apply to the Compose bars of the other platforms. The native bars
+    // keep their system look.
+    @Suppress("UNUSED_PARAMETER") style: ShellStyle,
     modifier: Modifier,
     content: @Composable () -> Unit,
 ) {

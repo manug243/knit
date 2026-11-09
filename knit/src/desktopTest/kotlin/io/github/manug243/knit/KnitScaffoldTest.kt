@@ -1,6 +1,7 @@
 package io.github.manug243.knit
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
@@ -252,6 +253,77 @@ class KnitScaffoldTest {
         onNodeWithText("toggle sheet").performClick()
         waitForIdle()
         onNodeWithText("Tab A").assertExists()
+    }
+
+    @Test
+    fun customTabBarReplacesMaterialBar() = runComposeUiTest {
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider { entry<Page> { page -> Text("page ${page.name}") } },
+                tabBar = { state ->
+                    Row {
+                        for (item in state.items) {
+                            Button(onClick = item.onClick) {
+                                Text("own ${item.title} ${if (item.selected) "on" else "off"}")
+                            }
+                        }
+                    }
+                },
+            )
+        }
+        onNodeWithText("Tab A").assertDoesNotExist()
+        onNodeWithText("own Tab A on").assertExists()
+        onNodeWithText("own Tab B off").performClick()
+        waitForIdle()
+        onNodeWithText("page b").assertExists()
+        onNodeWithText("own Tab B on").assertExists()
+    }
+
+    @Test
+    fun customTopBarGetsTitleActionsAndBack() = runComposeUiTest {
+        lateinit var navigator: KnitNavigator<ScaffoldTab>
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            navigator = nav
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider {
+                    entry<Page> { page ->
+                        Button(onClick = { nav.navigate(Page("${page.name}-detail")) }) { Text("open ${page.name}") }
+                    }
+                },
+                topBar = { key ->
+                    if (key is Page && key.name.endsWith("-detail")) {
+                        KnitTopBar("detail", actions = listOf(KnitAction("Share", scaffoldIcon) {}))
+                    } else {
+                        null
+                    }
+                },
+                topBarContent = { state ->
+                    Row {
+                        Text("own ${state.title} actions=${state.actions.size}")
+                        if (state.showBack) Button(onClick = state.onBack) { Text("own back") }
+                    }
+                },
+            )
+        }
+        onNodeWithText("open a").performClick()
+        waitForIdle()
+        onNodeWithText("own detail actions=1").assertExists()
+        onNodeWithContentDescription("Back").assertDoesNotExist()
+        onNodeWithText("own back").performClick()
+        waitForIdle()
+        runOnIdle { assertEquals(true, navigator.isAtTabRoot) }
     }
 
     @Test
