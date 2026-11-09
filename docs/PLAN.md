@@ -174,9 +174,13 @@ Größere Lücken, die die API vor 0.1.0 betreffen:
    Material-Leiste von knit in Standardfarben anders aus. Es braucht Theming oder einen Slot für eine eigene Leiste.
 
 Kleinere Punkte:
-4. Tab-Titel sind `StringResource`s. Der `tabs`-Block ist nicht `@Composable`, dort geht `stringResource` nicht.
-   Umgehbar durch Vorberechnen, besser wäre ein composabler Block.
-5. Pro Tab braucht knit einen SF-Symbol-Namen und einen `ImageVector`. Ob WeLists `IconSpec` ein Vektor ist, ist ungeklärt.
+4. Tab-Titel sind `StringResource`s. Der `tabs`-Block war nicht `@Composable`, dort ging `stringResource` nicht.
+   **Erledigt (Branch `feature/composable-tabs`):** `tabs` ist jetzt `@Composable KnitTabsScope<T>.() -> Unit`.
+5. WeLists Icons (`IconSpec`) sind keine `ImageVector`s, sondern SVG-Pfade auf einem 24er-Raster, die per `Canvas` als
+   Linien gezeichnet werden (`WeListIcon(icon, tint)`). Ein `ImageVector` zu verlangen, hätte eine Umwandlung erzwungen.
+   **Erledigt:** `KnitIcon(sfSymbol) { tint -> ... }` nimmt auch ein beliebiges Composable (zusätzlich zu
+   `KnitIcon(sfSymbol, vector)`). Eigene Leisten zeichnen es mit `KnitIcon.Content(tint)`. Für WeList also
+   `KnitIcon("list.bullet") { tint -> WeListIcon(tab.icon, tint = tint) }`.
 6. `ListsScreen` (Tab-Start) und `StoreListScreen` haben eigene Snackbar-Hosts, dazu ein globaler in `UIEventHandler`.
    Auf iOS müssten sie `Modifier.knitContentPadding()` nutzen. Sheets wurden dort nicht gefunden.
 7. Die Screens zeichnen ihre Header und Zurück-Buttons selbst (`LargeHeader`, `onBack`). Ohne `topBar` gibt es auf iOS

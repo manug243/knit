@@ -32,6 +32,8 @@ import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 private val RailBreakpoint = 600.dp
@@ -102,8 +104,11 @@ internal fun MaterialShell(
                         actions = {
                             // The first action is the outermost one, like on iOS.
                             for (action in bar.actions.asReversed()) {
-                                IconButton(onClick = action.onClick) {
-                                    Icon(imageVector = action.icon.vector, contentDescription = action.label)
+                                IconButton(
+                                    onClick = action.onClick,
+                                    modifier = Modifier.semantics { contentDescription = action.label },
+                                ) {
+                                    action.icon.Content()
                                 }
                             }
                         },
@@ -136,7 +141,7 @@ internal fun MaterialShell(
                                 NavigationRailItem(
                                     selected = index == selectedIndex,
                                     onClick = { onSelect(index) },
-                                    icon = { Icon(imageVector = item.icon.vector, contentDescription = null) },
+                                    icon = { item.icon.Content() },
                                     label = { Text(item.title) },
                                     colors = NavigationRailItemDefaults.colors(
                                         selectedIconColor = colors.tabBarSelectedContent,
@@ -184,7 +189,7 @@ internal fun MaterialShell(
                                 NavigationBarItem(
                                     selected = index == selectedIndex,
                                     onClick = { onSelect(index) },
-                                    icon = { Icon(imageVector = item.icon.vector, contentDescription = null) },
+                                    icon = { item.icon.Content() },
                                     label = { Text(item.title) },
                                     colors = NavigationBarItemDefaults.colors(
                                         selectedIconColor = colors.tabBarSelectedContent,
