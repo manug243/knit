@@ -5,6 +5,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -189,6 +190,39 @@ class KnitScaffoldTest {
         onNodeWithContentDescription("Share").performClick()
         onNodeWithContentDescription("Share").performClick()
         runOnIdle { assertEquals(2, clicks) }
+    }
+
+    @Test
+    fun screenCanSetItsOwnTopBar() = runComposeUiTest {
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider {
+                    entry<Page> { page ->
+                        if (page.name.endsWith("-detail")) {
+                            var count by remember { mutableIntStateOf(0) }
+                            KnitTopBarOverride(KnitTopBar("loaded $count"))
+                            Button(onClick = { count++ }) { Text("load") }
+                        } else {
+                            Button(onClick = { nav.navigate(Page("${page.name}-detail")) }) { Text("open ${page.name}") }
+                        }
+                    }
+                },
+            )
+        }
+        onNodeWithText("loaded 0").assertDoesNotExist()
+        onNodeWithText("open a").performClick()
+        waitForIdle()
+        onNodeWithText("loaded 0").assertExists()
+        onNodeWithText("load").performClick()
+        waitForIdle()
+        onNodeWithText("loaded 1").assertExists()
+        onNodeWithText("loaded 0").assertDoesNotExist()
     }
 
     @Test
