@@ -49,8 +49,9 @@ public val LocalKnitContentPadding: androidx.compose.runtime.ProvidableCompositi
  * only shown on the start screen of a tab and hides while the keyboard is open.
  *
  * @param navigator navigation state, see [rememberKnitNavigator].
- * @param tabs declares title and icon of every tab of the [navigator]. It runs on every
- * recomposition, so titles and icons can change at runtime.
+ * @param tabs declares title and icon of every tab of the [navigator]. The block is composable and
+ * runs on every recomposition, so titles can come from resources, for example `stringResource`,
+ * and titles and icons can change at runtime.
  * @param entryProvider maps a [NavKey] to its screen, usually built with `entryProvider { ... }`.
  * @param topBar returns the top bar for the screen of a [NavKey], or null for a screen without one.
  * Below a tab's start screen the bar also shows a back button that pops the screen. It is called
@@ -67,7 +68,7 @@ public val LocalKnitContentPadding: androidx.compose.runtime.ProvidableCompositi
 @Composable
 public fun <T : KnitTab> KnitScaffold(
     navigator: KnitNavigator<T>,
-    tabs: KnitTabsScope<T>.() -> Unit,
+    tabs: @Composable KnitTabsScope<T>.() -> Unit,
     entryProvider: (NavKey) -> NavEntry<NavKey>,
     modifier: Modifier = Modifier,
     topBar: (NavKey) -> KnitTopBar? = { null },
@@ -75,7 +76,7 @@ public fun <T : KnitTab> KnitScaffold(
     tabBar: (@Composable (KnitTabBarState) -> Unit)? = null,
     topBarContent: (@Composable (KnitTopBarState) -> Unit)? = null,
 ) {
-    val items = buildTabItems(tabs)
+    val items = composeTabItems(tabs)
     require(items.map { it.tab }.toSet() == navigator.tabs.toSet()) {
         "The tabs block has to declare exactly the tabs of the navigator: ${navigator.tabs}"
     }

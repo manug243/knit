@@ -327,6 +327,27 @@ class KnitScaffoldTest {
     }
 
     @Test
+    fun tabsBlockIsComposableAndIconsCanBeComposables() = runComposeUiTest {
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            // A composable reads the title here, like stringResource would.
+            val titleA = remember { "read in composition A" }
+            val ownIcon = KnitIcon("circle") { Text("own icon") }
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, titleA, ownIcon)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider { entry<Page> { page -> Text("page ${page.name}") } },
+            )
+        }
+        // The tab item merges its icon and label, so the icon is only found in the unmerged tree.
+        onNodeWithText("read in composition A", useUnmergedTree = true).assertExists()
+        onNodeWithText("own icon", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
     fun noTopBarWithoutConfig() = runComposeUiTest {
         show {}
         onNodeWithText("open a").performClick()
