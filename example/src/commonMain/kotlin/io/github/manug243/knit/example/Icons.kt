@@ -29,6 +29,12 @@ val ListsIcon = KnitIcon(
     ),
 )
 
+/** Action of the detail screens: opens the next one. */
+val NextIcon = KnitIcon(
+    sfSymbol = "plus",
+    vector = vectorIcon("next", "M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"),
+)
+
 val SettingsIcon = KnitIcon(
     sfSymbol = "gearshape",
     vector = vectorIcon(

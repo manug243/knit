@@ -159,6 +159,39 @@ class KnitScaffoldTest {
     }
 
     @Test
+    fun topBarActionIsShownAndClickable() = runComposeUiTest {
+        var clicks = 0
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider {
+                    entry<Page> { page ->
+                        Button(onClick = { nav.navigate(Page("${page.name}-detail")) }) { Text("open ${page.name}") }
+                    }
+                },
+                topBar = { key ->
+                    if (key is Page && key.name.endsWith("-detail")) {
+                        KnitTopBar("detail", actions = listOf(KnitAction("Share", scaffoldIcon) { clicks++ }))
+                    } else {
+                        null
+                    }
+                },
+            )
+        }
+        onNodeWithContentDescription("Share").assertDoesNotExist()
+        onNodeWithText("open a").performClick()
+        waitForIdle()
+        onNodeWithContentDescription("Share").performClick()
+        onNodeWithContentDescription("Share").performClick()
+        runOnIdle { assertEquals(2, clicks) }
+    }
+
+    @Test
     fun noTopBarWithoutConfig() = runComposeUiTest {
         show {}
         onNodeWithText("open a").performClick()

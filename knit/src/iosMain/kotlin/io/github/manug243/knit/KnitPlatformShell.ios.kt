@@ -29,6 +29,8 @@ import androidx.compose.ui.viewinterop.UIKitView
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
 import platform.CoreGraphics.CGSizeMake
+import platform.UIKit.UIAction
+import platform.UIKit.UIBarButtonItem
 import platform.UIKit.UIImage
 import platform.UIKit.UINavigationBar
 import platform.UIKit.UINavigationBarDelegateProtocol
@@ -162,14 +164,35 @@ private class TabBarSynchronizer {
  */
 @OptIn(ExperimentalForeignApi::class)
 private class NavigationBarSynchronizer {
-    private var signature: Pair<String, String?>? = null
+    private var signature: Triple<String, String?, List<Pair<String, String>>>? = null
+
+    // The button handlers read the actions from here, so they always call the latest callbacks
+    // although the native buttons are only rebuilt when title or icon change.
+    private var actions: List<KnitAction> = emptyList()
 
     fun sync(bar: UINavigationBar, topBar: ShellTopBar) {
-        val newSignature = topBar.title to topBar.backTitle
+        actions = topBar.actions
+        val newSignature = Triple(
+            topBar.title,
+            topBar.backTitle,
+            topBar.actions.map { it.label to it.icon.sfSymbol },
+        )
         if (newSignature == signature) return
+        val current = UINavigationItem(title = topBar.title)
+        // UIKit lists trailing buttons from the outermost inwards, like KnitTopBar.actions.
+        current.rightBarButtonItems = topBar.actions.mapIndexed { index, action ->
+            UIBarButtonItem(
+                primaryAction = UIAction.actionWithTitle(
+                    title = action.label,
+                    image = UIImage.systemImageNamed(action.icon.sfSymbol),
+                    identifier = null,
+                    handler = { _ -> actions.getOrNull(index)?.onClick?.invoke() },
+                ),
+            )
+        }
         val items = buildList {
             topBar.backTitle?.let { add(UINavigationItem(title = it)) }
-            add(UINavigationItem(title = topBar.title))
+            add(current)
         }
         bar.setItems(items, animated = false)
         signature = newSignature

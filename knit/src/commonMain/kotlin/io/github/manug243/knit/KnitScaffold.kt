@@ -93,6 +93,7 @@ public fun <T : KnitTab> KnitScaffold(
     val shellTopBar = topConfig?.let { config ->
         ShellTopBar(
             title = config.title,
+            actions = config.actions,
             backTitle = if (stack.size > 1) topBar(stack[stack.lastIndex - 1])?.title ?: "Back" else null,
             onBack = { navigator.back() },
         )
