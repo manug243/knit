@@ -78,6 +78,14 @@ internal fun MaterialShell(
                             }
                         }
                     },
+                    actions = {
+                        // The first action is the outermost one, like on iOS.
+                        for (action in bar.actions.asReversed()) {
+                            IconButton(onClick = action.onClick) {
+                                Icon(imageVector = action.icon.vector, contentDescription = action.label)
+                            }
+                        }
+                    },
                 )
             }
         }

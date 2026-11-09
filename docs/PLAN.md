@@ -58,7 +58,7 @@ Ungeprüft:
 
 Bekannte Lücken und Folgearbeiten:
 - `BackHandler` ist in dieser CMP-Version veraltet, Ersatz ist `NavigationEventHandler`. Migration offen.
-- Ein Tab-Wechsel hat keine Animation. Der Inhalt wird per `key(currentTab)` getauscht.
+- Ein Tab-Wechsel blendet seit Phase 2 über (vorher keine Animation).
 - `NavigationBar` und `NavigationRail` hängen an `material3 1.12.0-alpha03`, einer Vorabversion.
 - Gleiche `NavKey`s in zwei Tabs teilen sich den ViewModel-Speicher (Content-Key), das ist nicht abgesichert.
 - Snackbars und Sheets, die unter der nativen Leiste landen, haben noch keine Lösung in der API.
@@ -115,9 +115,27 @@ Statusleiste). Dazu `knitRoutes { route<T>() }` für die `SavedStateConfiguratio
 Compose-Geste, von Manuel auf dem iPhone bestätigt. Die CI startet die App zusätzlich direkt auf der Detailansicht
 (`-knit-detail`) und legt `detail.png` ab.
 
-Noch offen in Phase 2: Actions rechts in der Leiste, Titel-Updates aus dem Screen heraus, Tab-Wechsel-Animation, Lösung
-für Snackbars und Sheets unter der nativen Leiste, mitgleitende Leiste beim Swipe-Back (springt wahrscheinlich, ungeprüft),
-Predictive Back auf Android, Ersatz für den veralteten `BackHandler`.
+Danach gebaut (Branch `feature/chrome-extras`, lokal auf Desktop und Android-Host getestet, iOS noch nicht gebaut):
+- `KnitTopBar(title, actions)` mit `KnitAction(label, icon, onClick)`. iOS: `UIBarButtonItem` mit `UIAction` rechts in der
+  Leiste, Android/Desktop: `IconButton`s in der `TopAppBar`. Die erste Action liegt außen.
+- `KnitTopBarOverride(KnitTopBar(...))` im Screen setzt die Leiste aus dem Screen heraus (Titel aus geladenen Daten,
+  Actions je nach Zustand). Gewinnt gegen den `topBar`-Parameter, gespeichert pro `NavKey`, bis der Key aus allen Stacks
+  verschwindet. Dafür umhüllt das Scaffold den `entryProvider`. Zwei gleiche Keys in einem Stack teilen sich die Leiste.
+- Tab-Wechsel blendet per `Crossfade` (180 ms) über, kein Push/Pop.
+- `KnitTabBarHidden()` hält die Tab-Bar verborgen, solange es in der Komposition ist, gedacht neben Sheets und Dialogen.
+  `Modifier.knitContentPadding()` für Dinge am Bildschirmrand wie den `SnackbarHost`. Beides ist nur eine Hilfe, kein
+  automatisches Verhalten: Ein `ModalBottomSheet` ohne `KnitTabBarHidden()` liegt auf iOS weiter unter der nativen Leiste.
+
+Auf dem iPhone (iOS 26.2) von Manuel bestätigt: Die Navigationsleiste mit Zurück-Button, Titel und Action sitzt. Beim
+Öffnen einer Detailseite fahren Tab-Bar (nach unten) und Navigationsleiste (von oben) animiert aus, beim Verlassen,
+auch per Swipe-Back, wieder ein. Ungeklärt: ob die Leisten dabei dem Finger folgen wie bei einem
+`UINavigationController`. Die Animation hängt am Navigator-Zustand und nicht an der Geste, das spricht eher dagegen. Ein erster Fehler zeigte sich nur auf dem Gerät: Die
+`update`-Funktion des `UIKitView` las ein Nicht-State-Feld und lief bei einem Screen, der nach dem ersten Frame geöffnet
+wurde, nicht mehr, die Leiste blieb leer. Der CI-Screenshot übersah das, weil er die Detailseite direkt beim Start öffnet.
+Fix: die Funktion fängt `topBar` ein und läuft damit bei jeder Änderung.
+
+Noch offen in Phase 2: Predictive Back auf Android, Ersatz für den veralteten `BackHandler`. Ungeprüft: Crossfade
+zwischen Tabs und das Verhalten der Sheets mit `KnitTabBarHidden()` auf einem Gerät.
 
 **Phase 3, Veröffentlichung:** README im Skeleton-Stil mit GIFs, Release 0.1.0, danach WeList als Praxistest.
 
