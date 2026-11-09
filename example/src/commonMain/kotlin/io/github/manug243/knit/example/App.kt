@@ -15,7 +15,11 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,38 +50,47 @@ private const val StripeCount = 40
  */
 @Composable
 fun App(openDetailOnStart: Boolean = false) {
-    MaterialTheme {
+    // Follows the system, so the status bar icons that enableEdgeToEdge picks match the surface behind them.
+    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()) {
         val navigator = rememberKnitNavigator(AppTab.entries, RouteSavedStateConfiguration)
         // Lets the CI take a screenshot of a screen with the top bar without tapping through the app.
         LaunchedEffect(openDetailOnStart) {
             if (openDetailOnStart && navigator.isAtTabRoot) navigator.navigate(Route.Detail("Home", 0))
         }
 
-        KnitScaffold(
-            navigator = navigator,
-            tabs = {
-                tab(AppTab.Home, "Home", HomeIcon)
-                tab(AppTab.Lists, "Lists", ListsIcon)
-                tab(AppTab.Settings, "Settings", SettingsIcon)
-            },
-            entryProvider = entryProvider {
-                entry<Route.Home> { StripeScreen("Home") { navigator.navigate(Route.Detail("Home", it)) } }
-                entry<Route.Lists> { StripeScreen("Lists") { navigator.navigate(Route.Detail("Lists", it)) } }
-                entry<Route.Settings> { StripeScreen("Settings") { navigator.navigate(Route.Detail("Settings", it)) } }
-                entry<Route.Detail> { route -> DetailScreen(route) }
-            },
-            topBar = { key ->
-                when (key) {
-                    is Route.Detail -> KnitTopBar(
-                        title = "${key.tab} ${key.index}",
-                        actions = listOf(
-                            KnitAction("Next", NextIcon) { navigator.navigate(Route.Detail(key.tab, key.index + 1)) },
-                        ),
-                    )
-                    else -> null
-                }
-            },
-        )
+        // The window background comes from the Android theme, not from Compose. Without a surface the
+        // area behind the status bar stays light in dark mode.
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            KnitScaffold(
+                navigator = navigator,
+                tabs = {
+                    tab(AppTab.Home, "Home", HomeIcon)
+                    tab(AppTab.Lists, "Lists", ListsIcon)
+                    tab(AppTab.Settings, "Settings", SettingsIcon)
+                },
+                entryProvider = entryProvider {
+                    entry<Route.Home> { StripeScreen("Home") { navigator.navigate(Route.Detail("Home", it)) } }
+                    entry<Route.Lists> { StripeScreen("Lists") { navigator.navigate(Route.Detail("Lists", it)) } }
+                    entry<Route.Settings> {
+                        StripeScreen("Settings") { navigator.navigate(Route.Detail("Settings", it)) }
+                    }
+                    entry<Route.Detail> { route -> DetailScreen(route) }
+                },
+                topBar = { key ->
+                    when (key) {
+                        is Route.Detail -> KnitTopBar(
+                            title = "${key.tab} ${key.index}",
+                            actions = listOf(
+                                KnitAction("Next", NextIcon) {
+                                    navigator.navigate(Route.Detail(key.tab, key.index + 1))
+                                },
+                            ),
+                        )
+                        else -> null
+                    }
+                },
+            )
+        }
     }
 }
 
