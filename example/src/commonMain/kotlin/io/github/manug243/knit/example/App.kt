@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
+import io.github.manug243.knit.KnitAction
 import io.github.manug243.knit.KnitScaffold
 import io.github.manug243.knit.KnitTopBar
 import io.github.manug243.knit.LocalKnitContentPadding
@@ -67,7 +68,12 @@ fun App(openDetailOnStart: Boolean = false) {
             },
             topBar = { key ->
                 when (key) {
-                    is Route.Detail -> KnitTopBar("${key.tab} ${key.index}")
+                    is Route.Detail -> KnitTopBar(
+                        title = "${key.tab} ${key.index}",
+                        actions = listOf(
+                            KnitAction("Next", NextIcon) { navigator.navigate(Route.Detail(key.tab, key.index + 1)) },
+                        ),
+                    )
                     else -> null
                 }
             },
