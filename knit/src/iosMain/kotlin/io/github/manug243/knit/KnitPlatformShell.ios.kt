@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.UIKitInteropInteractionMode
 import androidx.compose.ui.viewinterop.UIKitInteropProperties
@@ -38,6 +37,7 @@ import platform.UIKit.UINavigationItem
 import platform.UIKit.UITabBar
 import platform.UIKit.UITabBarDelegateProtocol
 import platform.UIKit.UITabBarItem
+import platform.UIKit.UIView
 import platform.darwin.NSObject
 
 /** Height of a classic tab bar without the home indicator region. */
@@ -50,8 +50,9 @@ private val ClassicNavigationBarHeight = 44.dp
  * iOS chrome: the content fills the screen in one Compose tree and a stock [UITabBar] sits above it
  * as a native overlay. Built with the iOS 26 SDK the bar renders as Liquid Glass.
  *
- * The bar stays mounted while hidden and slides out of the screen, because a `UIKitView` is torn down
- * as soon as it leaves the composition.
+ * The bars stay mounted while hidden and fade out, because a `UIKitView` is torn down as soon as it
+ * leaves the composition. The navigation bar below the status bar stays in place and only swaps its
+ * items, like in a navigation controller.
  */
 @OptIn(ExperimentalForeignApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -70,18 +71,16 @@ internal actual fun KnitPlatformShell(
     val barHeight = maxOf(ClassicTabBarHeight + bottomInset, measuredHeight)
 
     val coveredHeight by animateDpAsState(if (barVisible) barHeight else 0.dp)
-    val slideOut by animateDpAsState(if (barVisible) 0.dp else barHeight)
 
     // Without a navigation controller the bar knows nothing about the status bar and lays its content
     // out at the top of its own frame. So the frame is exactly the 44 dp of content and sits below
-    // the status bar. While hidden, the bar slides up past the screen edge.
+    // the status bar. It never moves: like in iOS, only the items change when a screen is pushed, and
+    // the whole bar fades when a screen has none.
     val statusBarInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBarHeight = ClassicNavigationBarHeight
-    val navBarTop = statusBarInset
     val shownTopBar = remember { LastValue<ShellTopBar>() }
     if (topBar != null) shownTopBar.value = topBar
     val coveredTop by animateDpAsState(if (topBar != null) ClassicNavigationBarHeight else 0.dp)
-    val slideUp by animateDpAsState(if (topBar != null) 0.dp else navBarTop + navBarHeight)
     // Same as the tab bar delegate: UINavigationBar holds it weakly.
     val navDelegate = remember { KnitNavigationBarDelegate { shownTopBar.value?.onBack?.invoke() } }
     val navSynchronizer = remember { NavigationBarSynchronizer() }
@@ -97,33 +96,24 @@ internal actual fun KnitPlatformShell(
             ProvideKnitContentPadding(PaddingValues(top = coveredTop, bottom = coveredHeight), content)
         }
         UIKitView(
-            factory = { UINavigationBar().apply { this.delegate = navDelegate } },
+            factory = {
+                UINavigationBar().apply {
+                    this.delegate = navDelegate
+                    alpha = 0.0
+                    userInteractionEnabled = false
+                }
+            },
             modifier = Modifier
                 .align(Alignment.TopCenter)
+                .padding(top = statusBarInset)
                 .fillMaxWidth()
-                .height(navBarHeight)
-                .offset { IntOffset(x = 0, y = (navBarTop - slideUp).roundToPx()) },
+                .height(navBarHeight),
             // The lambda has to capture topBar: a new instance on every change is what makes UIKitView run
             // update again. Reading only shownTopBar, a plain field, left the bar empty when the screen
             // was opened after the first frame.
-            update = { bar -> (topBar ?: shownTopBar.value)?.let { navSynchronizer.sync(bar, it) } },
-            properties = UIKitInteropProperties(
-                interactionMode = UIKitInteropInteractionMode.NonCooperative,
-                isNativeAccessibilityEnabled = true,
-                placedAsOverlay = true,
-            ),
-        )
-        UIKitView(
-            factory = { UITabBar().apply { this.delegate = delegate } },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(barHeight)
-                .offset { IntOffset(x = 0, y = slideOut.roundToPx()) },
             update = { bar ->
-                synchronizer.sync(bar, items, selectedIndex)
-                val height = bar.sizeThatFits(CGSizeMake(0.0, 0.0)).useContents { height }.dp
-                if (height != measuredHeight) measuredHeight = height
+                (topBar ?: shownTopBar.value)?.let { navSynchronizer.sync(bar, it) }
+                bar.fadeTo(topBar != null)
             },
             properties = UIKitInteropProperties(
                 interactionMode = UIKitInteropInteractionMode.NonCooperative,
@@ -131,6 +121,45 @@ internal actual fun KnitPlatformShell(
                 placedAsOverlay = true,
             ),
         )
+        UIKitView(
+            factory = {
+                UITabBar().apply {
+                    this.delegate = delegate
+                    alpha = if (barVisible) 1.0 else 0.0
+                    userInteractionEnabled = barVisible
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(barHeight),
+            update = { bar ->
+                synchronizer.sync(bar, items, selectedIndex)
+                val height = bar.sizeThatFits(CGSizeMake(0.0, 0.0)).useContents { height }.dp
+                if (height != measuredHeight) measuredHeight = height
+                bar.fadeTo(barVisible)
+            },
+            properties = UIKitInteropProperties(
+                interactionMode = UIKitInteropInteractionMode.NonCooperative,
+                isNativeAccessibilityEnabled = true,
+                placedAsOverlay = true,
+            ),
+        )
+    }
+}
+
+private const val BarFadeSeconds = 0.25
+
+/**
+ * Fades a native bar in or out and switches its touches off while it is invisible. A hidden bar
+ * stays in place, so nothing slides across the screen like with an offset.
+ */
+@OptIn(ExperimentalForeignApi::class)
+private fun UIView.fadeTo(visible: Boolean) {
+    val target = if (visible) 1.0 else 0.0
+    userInteractionEnabled = visible
+    if (alpha != target) {
+        UIView.animateWithDuration(BarFadeSeconds) { alpha = target }
     }
 }
 
@@ -197,7 +226,10 @@ private class NavigationBarSynchronizer {
             topBar.backTitle?.let { add(UINavigationItem(title = it)) }
             add(current)
         }
-        bar.setItems(items, animated = false)
+        // Items change with the native push or pop animation while the bar is on screen. While it is
+        // hidden or fading in they are set at once.
+        val animated = signature != null && bar.alpha > 0.5
+        bar.setItems(items, animated = animated)
         signature = newSignature
     }
 }
