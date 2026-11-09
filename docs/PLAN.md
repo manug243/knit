@@ -7,9 +7,9 @@ Stand: 2026-11-08
 | Phase | Inhalt | Status |
 |---|---|---|
 | 0 | Grundgerüst | gebaut und getestet, iOS über die macOS-CI (Xcode 26) grün |
-| 1 | Tabs | gebaut und getestet: Navigator, Scaffold, Glass-`UITabBar`. Auf dem iPhone (iOS 26.2, AltStore) von Manuel angesehen: Glass, Tab-Wechsel, Detail, Swipe-Back laufen. Android-Gerät ungeprüft |
-| 2 | Back und Top-Bar | Kern fertig (Branch `feature/top-bar`): `topBar`-Parameter, Material-`TopAppBar`, `UINavigationBar`-Overlay mit System-Zurück-Button, `knitRoutes`-Helfer. iOS-CI grün, auf iPhone und Android-Gerät von Manuel angesehen. Offen: Actions, Tab-Animation, Snackbars/Sheets, Titel-Updates, siehe unten |
-| 3 | Veröffentlichung | offen |
+| 1 | Tabs | gebaut und getestet: Navigator, Scaffold, Glass-`UITabBar`. Auf dem iPhone (iOS 26.2, AltStore) von Manuel angesehen: Glass, Tab-Wechsel, Detail, Swipe-Back laufen. Android: Pixel 10 (Android 17) per adb geprüft |
+| 2 | Back und Top-Bar | weitgehend fertig und auf `develop`: Navigationsleiste mit Zurück, Titel, Actions, Titel aus dem Screen, Tab-Crossfade, Sheet- und Snackbar-Hilfen, iOS-typische Animation, `NavigationBackHandler`. Ungeprüft: Wischen vom Rand auf Android (Predictive-Back-Animation), Crossfade und Sheets auf einem Gerät, iOS-Build nach PR #10 |
+| 3 | Veröffentlichung | in Vorbereitung: Lückenliste gegen WeList steht unten, danach `wasmJs`-Target, API-Check, README, Release |
 | 4 | `UINavigationController`-Backend (experimentell) | offen |
 
 ## Test auf dem iPhone (ohne Mac)
@@ -148,10 +148,45 @@ animiert das Zurück auf einer Detailseite selbst. Der Wechsel von einem Tab-Sta
 Handler und überblendet erst beim Abschluss der Geste, ohne Fortschrittsanimation. Ungeprüft: Zurück auf einem
 Android-Gerät mit Android 14 oder neuer, und der iOS-Build mit der neuen Abhängigkeit.
 
-Noch offen in Phase 2: Predictive Back auf Android, Ersatz für den veralteten `BackHandler`. Ungeprüft: Crossfade
-zwischen Tabs und das Verhalten der Sheets mit `KnitTabBarHidden()` auf einem Gerät.
+Der veraltete `BackHandler` ist ersetzt (PR #10). Auf dem Pixel 10 (Android 17) per adb geprüft: Tab-Wechsel, Zurück vom
+Tab-Start zu Home, Detailseite mit Top-Bar, Zurück von der Detailseite. Ungeprüft: Wischen vom Rand (Predictive-Back-
+Animation), Crossfade zwischen Tabs und Sheets mit `KnitTabBarHidden()` auf einem Gerät.
 
-**Phase 3, Veröffentlichung:** README im Skeleton-Stil mit GIFs, Release 0.1.0, danach WeList als Praxistest.
+**Phase 3, Veröffentlichung:** WeList als Probelauf vor dem Release (die API wird mit 0.1.0 zugesagt), dann API-Check
+(`binary-compatibility-validator`), README im Skeleton-Stil mit Bildern, Release-Pipeline angleichen (`macos-26` wie die
+CI), Versionsname klären (`0.1.0-alpha01` wegen Material 3 Alpha), Release.
+
+### Lückenliste knit gegen WeList (2026-11-09, nur gelesen)
+
+Geprüft wurden `navigation/` (`TabNavigator`, `MainShell`, `Route`, `TabBar`, `TopLevelDestination`), die Build-Dateien und
+die Screens auf Overlays und Insets. WeList wird nicht geändert, der Probelauf läuft in einer temporären Kopie außerhalb
+des Repos.
+
+Größere Lücken, die die API vor 0.1.0 betreffen:
+1. **Web-Target fehlt.** WeList baut für Android, iOS, Desktop und `wasmJs` (im Kern auch `js`). knit hat Android, iOS und
+   Desktop. Ohne `wasmJs`-Variante bricht der Web-Build von WeList an knit ab. Lösung: `wasmJs`-Target mit der
+   Material-Leiste, ohne native Leisten. Ob Navigation 3 und `lifecycle-viewmodel-navigation3` dort laufen, ist ungeprüft.
+2. **Versionen.** WeList: Kotlin 2.4.10, Compose 1.11.1, Material 3 1.10.0-alpha05. knit: Kotlin 2.3.21, Compose 1.12.2,
+   Material 3 1.12.0-alpha03, Navigation 3 1.1.2. Ein neuerer Compiler liest ältere Bibliotheken, aber Gradle hebt WeLists
+   Compose-Version auf die von knit an. Ob das ohne Konflikte geht, zeigt nur ein Versuch.
+3. **Eigenes Design.** WeList nutzt kein `MaterialTheme`, sondern `WeListTheme`, eigene Icons (`IconSpec`) und eine
+   selbst gebaute Tab-Bar und Rail. Auf iOS ersetzt die native Leiste das, gewollt. Auf Android, Desktop und Web sähe die
+   Material-Leiste von knit in Standardfarben anders aus. Es braucht Theming oder einen Slot für eine eigene Leiste.
+
+Kleinere Punkte:
+4. Tab-Titel sind `StringResource`s. Der `tabs`-Block ist nicht `@Composable`, dort geht `stringResource` nicht.
+   Umgehbar durch Vorberechnen, besser wäre ein composabler Block.
+5. Pro Tab braucht knit einen SF-Symbol-Namen und einen `ImageVector`. Ob WeLists `IconSpec` ein Vektor ist, ist ungeklärt.
+6. `ListsScreen` (Tab-Start) und `StoreListScreen` haben eigene Snackbar-Hosts, dazu ein globaler in `UIEventHandler`.
+   Auf iOS müssten sie `Modifier.knitContentPadding()` nutzen. Sheets wurden dort nicht gefunden.
+7. Die Screens zeichnen ihre Header und Zurück-Buttons selbst (`LargeHeader`, `onBack`). Ohne `topBar` gibt es auf iOS
+   nur den Swipe-Back und keinen nativen Zurück-Button. Ob WeList die native Leiste übernimmt, ist eine Gestaltungsfrage.
+8. Die Screens müssen auf iOS `LocalKnitContentPadding` auf ihre scrollbaren Inhalte anwenden.
+
+Schon abgedeckt: ein Backstack pro Tab, erneutes Tippen zurück zum Start, Zurück vom Tab-Start zum ersten Tab, Leiste nur
+auf dem Start, Rail ab 600 dp, ViewModel-Store und gespeicherter Zustand pro Eintrag, polymorphe Route-Konfiguration,
+`select(Lists)` aus einem tiefen Screen, hochgehobener Zustand wie `partyNotice` (der `entryProvider` ist ein Parameter).
+Unterschiede im Verhalten: knit blendet die Leiste bei offener Tastatur aus und überblendet Tabs.
 
 **Phase 4, experimentell:** `UINavigationController`-Backend, nur falls Phase 2 sich nicht gut genug anfühlt.
 
