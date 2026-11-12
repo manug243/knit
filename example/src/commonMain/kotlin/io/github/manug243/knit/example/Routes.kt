@@ -27,10 +27,5 @@ enum class AppTab(override val root: NavKey) : KnitTab {
     Settings(Route.Settings),
 }
 
-/** Needed so the back stacks can be saved on iOS, where Navigation 3 has no reflection. */
-val RouteSavedStateConfiguration = knitRoutes {
-    route<Route.Home>()
-    route<Route.Lists>()
-    route<Route.Settings>()
-    route<Route.Detail>()
-}
+/** Lets the back stacks be saved. Covers every subclass of [Route], nothing to register per screen. */
+val RouteSavedStateConfiguration = knitRoutes<Route>()

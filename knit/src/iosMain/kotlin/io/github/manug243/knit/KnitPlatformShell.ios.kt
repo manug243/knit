@@ -1,10 +1,13 @@
 package io.github.manug243.knit
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,7 +15,10 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -20,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.UIKitInteropInteractionMode
@@ -27,8 +34,12 @@ import androidx.compose.ui.viewinterop.UIKitInteropProperties
 import androidx.compose.ui.viewinterop.UIKitView
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
+import kotlinx.coroutines.delay
 import platform.CoreGraphics.CGSizeMake
+import platform.Foundation.NSNotificationCenter
+import platform.Foundation.NSOperationQueue
 import platform.UIKit.UIAction
+import platform.UIKit.UIApplicationDidBecomeActiveNotification
 import platform.UIKit.UIBarButtonItem
 import platform.UIKit.UIImage
 import platform.UIKit.UINavigationBar
@@ -37,6 +48,7 @@ import platform.UIKit.UINavigationItem
 import platform.UIKit.UITabBar
 import platform.UIKit.UITabBarDelegateProtocol
 import platform.UIKit.UITabBarItem
+import platform.UIKit.UIUserInterfaceStyle
 import platform.UIKit.UIView
 import platform.darwin.NSObject
 
@@ -93,10 +105,33 @@ internal actual fun KnitPlatformShell(
     // UIKit calls it on user taps only, not when selectedItem is set from code, so there is no loop.
     val delegate = remember { KnitTabBarDelegate { index -> currentOnSelect(index) } }
     val synchronizer = remember { TabBarSynchronizer() }
+    // The bar gets its light or dark style from Compose instead of resolving it on its own, and is
+    // rebuilt when the app returns to the foreground. Without that the glass bar could come back from
+    // the background in the light style while the app is dark, until a tab was switched.
+    val dark = isSystemInDarkTheme()
+    val foregroundCount = rememberForegroundCount()
+
+    val system = systemSafePadding()
+    val layoutDirection = LocalLayoutDirection.current
+    // A hidden bar gives up its area. The wrapper view of an interop view takes the touches inside its
+    // bounds even when the bar itself ignores them, which would leave Compose buttons below it dead.
+    val navBarOnScreen = topBar != null || coveredTop > 0.dp
+    val tabBarOnScreen = barVisible || coveredHeight > 0.dp
 
     Box(modifier = modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
-            ProvideKnitContentPadding(PaddingValues(top = coveredTop, bottom = coveredHeight), content)
+            // The tab bar's height already contains the home indicator region, so the larger one counts.
+            val safe = PaddingValues(
+                start = system.calculateStartPadding(layoutDirection),
+                top = system.calculateTopPadding() + coveredTop,
+                end = system.calculateEndPadding(layoutDirection),
+                bottom = maxOf(system.calculateBottomPadding(), coveredHeight),
+            )
+            ProvideKnitContentPadding(
+                chrome = PaddingValues(top = coveredTop, bottom = coveredHeight),
+                safe = safe,
+                content = content,
+            )
         }
         UIKitView(
             factory = {
@@ -110,7 +145,7 @@ internal actual fun KnitPlatformShell(
                 .align(Alignment.TopCenter)
                 .padding(top = statusBarInset)
                 .fillMaxWidth()
-                .height(navBarHeight),
+                .height(if (navBarOnScreen) navBarHeight else 0.dp),
             // The lambda has to capture topBar: a new instance on every change is what makes UIKitView run
             // update again. Reading only shownTopBar, a plain field, left the bar empty when the screen
             // was opened after the first frame.
@@ -135,9 +170,14 @@ internal actual fun KnitPlatformShell(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .height(barHeight),
+                .height(if (tabBarOnScreen) barHeight else 0.dp),
             update = { bar ->
-                synchronizer.sync(bar, items, selectedIndex)
+                bar.overrideUserInterfaceStyle = if (dark) {
+                    UIUserInterfaceStyle.UIUserInterfaceStyleDark
+                } else {
+                    UIUserInterfaceStyle.UIUserInterfaceStyleLight
+                }
+                synchronizer.sync(bar, items, selectedIndex, generation = foregroundCount)
                 val height = bar.sizeThatFits(CGSizeMake(0.0, 0.0)).useContents { height }.dp
                 if (height != measuredHeight) measuredHeight = height
                 bar.fadeTo(barVisible)
@@ -152,6 +192,35 @@ internal actual fun KnitPlatformShell(
 }
 
 private const val BarFadeSeconds = 0.25
+
+/** Time the first frames after a return to the foreground get before the bar is rebuilt once more. */
+private const val ForegroundSettleMillis = 400L
+
+/**
+ * Changes whenever the app becomes active, and once more shortly after, when the content below the
+ * bar is drawn again.
+ */
+@Composable
+private fun rememberForegroundCount(): Int {
+    var activations by remember { mutableIntStateOf(0) }
+    var settled by remember { mutableIntStateOf(0) }
+    DisposableEffect(Unit) {
+        val center = NSNotificationCenter.defaultCenter
+        val observer = center.addObserverForName(
+            name = UIApplicationDidBecomeActiveNotification,
+            `object` = null,
+            queue = NSOperationQueue.mainQueue,
+        ) { _ -> activations++ }
+        onDispose { center.removeObserver(observer) }
+    }
+    LaunchedEffect(activations) {
+        if (activations > 0) {
+            delay(ForegroundSettleMillis)
+            settled = activations
+        }
+    }
+    return activations + settled
+}
 
 /**
  * Fades a native bar in or out and switches its touches off while it is invisible. A hidden bar
@@ -170,10 +239,15 @@ private fun UIView.fadeTo(visible: Boolean) {
 @OptIn(ExperimentalForeignApi::class)
 private class TabBarSynchronizer {
     private var signature: List<Pair<String, String>>? = null
+    private var generation = 0
 
-    fun sync(bar: UITabBar, items: List<ShellItem>, selectedIndex: Int) {
+    /** A new [generation] rebuilds the items even if nothing about them changed. */
+    fun sync(bar: UITabBar, items: List<ShellItem>, selectedIndex: Int, generation: Int) {
         val newSignature = items.map { it.title to it.icon.sfSymbol }
-        if (newSignature != signature) {
+        val rebuild = generation != this.generation
+        this.generation = generation
+        if (rebuild) bar.setNeedsLayout()
+        if (rebuild || newSignature != signature) {
             bar.setItems(
                 items.mapIndexed { index, item ->
                     UITabBarItem(

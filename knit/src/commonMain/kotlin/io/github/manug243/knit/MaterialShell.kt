@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
@@ -32,6 +34,7 @@ import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -69,10 +72,20 @@ internal fun MaterialShell(
     val colors = style.colors
     val currentContent by rememberUpdatedState(content)
     val movableContent = remember {
-        movableContentOf {
-            ProvideKnitContentPadding(PaddingValues(0.dp)) { currentContent() }
+        movableContentOf<PaddingValues> { safe ->
+            ProvideKnitContentPadding(chrome = PaddingValues(0.dp), safe = safe) { currentContent() }
         }
     }
+    val system = systemSafePadding()
+    val layoutDirection = LocalLayoutDirection.current
+    // What is left of the system insets for the screen. A visible bar handles the inset at its edge
+    // itself, so the screen must not add it again.
+    fun safePadding(wide: Boolean) = PaddingValues(
+        start = if (wide && barVisible) 0.dp else system.calculateStartPadding(layoutDirection),
+        top = if (topBar != null) 0.dp else system.calculateTopPadding(),
+        end = system.calculateEndPadding(layoutDirection),
+        bottom = if (!wide && barVisible) 0.dp else system.calculateBottomPadding(),
+    )
 
     // The bar content stays on screen while the bar animates out.
     val shownTopBar = remember { LastValue<ShellTopBar>() }
@@ -158,7 +171,7 @@ internal fun MaterialShell(
                 Column(modifier = Modifier.weight(1f).fillMaxSize()) {
                     topBarSlot()
                     androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f).then(contentArea)) {
-                        movableContent()
+                        movableContent(safePadding(wide = true))
                     }
                 }
             }
@@ -172,7 +185,7 @@ internal fun MaterialShell(
                     contentArea
                 }
                 androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f).then(contentModifier)) {
-                    movableContent()
+                    movableContent(safePadding(wide = false))
                 }
                 AnimatedVisibility(
                     visible = barVisible,
