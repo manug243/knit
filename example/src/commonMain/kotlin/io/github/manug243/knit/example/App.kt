@@ -3,16 +3,9 @@ package io.github.manug243.knit.example
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -26,13 +19,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import io.github.manug243.knit.KnitAction
 import io.github.manug243.knit.KnitScaffold
 import io.github.manug243.knit.KnitTopBar
-import io.github.manug243.knit.LocalKnitContentPadding
+import io.github.manug243.knit.knitSafeArea
+import io.github.manug243.knit.knitSafePadding
 import io.github.manug243.knit.rememberKnitNavigator
 
 private val StripeColors = listOf(
@@ -96,16 +89,9 @@ fun App(openDetailOnStart: Boolean = false) {
 
 @Composable
 private fun StripeScreen(title: String, onOpen: (Int) -> Unit) {
-    val system = WindowInsets.safeDrawing.asPaddingValues()
-    val layoutDirection = LocalLayoutDirection.current
-    // The bar floats above the content on iOS, so the list pads its end by the bar's height.
-    val contentPadding = PaddingValues(
-        start = system.calculateStartPadding(layoutDirection),
-        top = system.calculateTopPadding(),
-        end = system.calculateEndPadding(layoutDirection),
-        bottom = LocalKnitContentPadding.current.calculateBottomPadding(),
-    )
-    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = contentPadding) {
+    // One value for every platform: system bars, cutout and knit's bars. As contentPadding the
+    // stripes still scroll behind the glass bar on iOS.
+    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = knitSafePadding()) {
         items((0 until StripeCount).toList()) { index ->
             Box(
                 modifier = Modifier
@@ -123,21 +109,11 @@ private fun StripeScreen(title: String, onOpen: (Int) -> Unit) {
 
 @Composable
 private fun DetailScreen(route: Route.Detail) {
-    val system = WindowInsets.safeDrawing.asPaddingValues()
-    val layoutDirection = LocalLayoutDirection.current
-    val chrome = LocalKnitContentPadding.current
-    // The navigation bar floats over the content on iOS, so its height comes on top of the system insets.
-    val padding = PaddingValues(
-        start = system.calculateStartPadding(layoutDirection),
-        top = system.calculateTopPadding() + chrome.calculateTopPadding(),
-        end = system.calculateEndPadding(layoutDirection),
-        bottom = system.calculateBottomPadding(),
-    )
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(StripeColors[route.index % StripeColors.size])
-            .padding(padding),
+            .knitSafeArea(),
         contentAlignment = Alignment.Center,
     ) {
         Text("${route.tab} ${route.index}", color = Color.Black)

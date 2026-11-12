@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.UIKitInteropInteractionMode
@@ -94,9 +97,27 @@ internal actual fun KnitPlatformShell(
     val delegate = remember { KnitTabBarDelegate { index -> currentOnSelect(index) } }
     val synchronizer = remember { TabBarSynchronizer() }
 
+    val system = systemSafePadding()
+    val layoutDirection = LocalLayoutDirection.current
+    // A hidden bar gives up its area. The wrapper view of an interop view takes the touches inside its
+    // bounds even when the bar itself ignores them, which would leave Compose buttons below it dead.
+    val navBarOnScreen = topBar != null || coveredTop > 0.dp
+    val tabBarOnScreen = barVisible || coveredHeight > 0.dp
+
     Box(modifier = modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
-            ProvideKnitContentPadding(PaddingValues(top = coveredTop, bottom = coveredHeight), content)
+            // The tab bar's height already contains the home indicator region, so the larger one counts.
+            val safe = PaddingValues(
+                start = system.calculateStartPadding(layoutDirection),
+                top = system.calculateTopPadding() + coveredTop,
+                end = system.calculateEndPadding(layoutDirection),
+                bottom = maxOf(system.calculateBottomPadding(), coveredHeight),
+            )
+            ProvideKnitContentPadding(
+                chrome = PaddingValues(top = coveredTop, bottom = coveredHeight),
+                safe = safe,
+                content = content,
+            )
         }
         UIKitView(
             factory = {
@@ -110,7 +131,7 @@ internal actual fun KnitPlatformShell(
                 .align(Alignment.TopCenter)
                 .padding(top = statusBarInset)
                 .fillMaxWidth()
-                .height(navBarHeight),
+                .height(if (navBarOnScreen) navBarHeight else 0.dp),
             // The lambda has to capture topBar: a new instance on every change is what makes UIKitView run
             // update again. Reading only shownTopBar, a plain field, left the bar empty when the screen
             // was opened after the first frame.
@@ -135,7 +156,7 @@ internal actual fun KnitPlatformShell(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .height(barHeight),
+                .height(if (tabBarOnScreen) barHeight else 0.dp),
             update = { bar ->
                 synchronizer.sync(bar, items, selectedIndex)
                 val height = bar.sizeThatFits(CGSizeMake(0.0, 0.0)).useContents { height }.dp

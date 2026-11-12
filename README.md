@@ -2,7 +2,94 @@
 
 Native iOS and Android navigation chrome for Compose Multiplatform, built on Navigation 3.
 
+One Compose tree, one navigation state, no Swift. iOS gets a real `UITabBar` and `UINavigationBar` (Liquid Glass
+when built with the iOS 26 SDK), Android gets Material 3 bars with a rail from 600 dp and predictive back.
+
 Work in progress, not published yet.
+
+## Quick start
+
+Routes are Navigation 3 keys. Put them in one sealed hierarchy and knit saves them without any registration:
+
+```kotlin
+@Serializable
+sealed interface Route : NavKey {
+    @Serializable data object Home : Route
+    @Serializable data object Settings : Route
+    @Serializable data class Detail(val id: Int) : Route
+}
+
+enum class AppTab(override val root: NavKey) : KnitTab {
+    Home(Route.Home),
+    Settings(Route.Settings),
+}
+
+val RouteConfig = knitRoutes<Route>()
+```
+
+The app is one scaffold. The same code runs on every platform:
+
+```kotlin
+@Composable
+fun App() {
+    val navigator = rememberKnitNavigator(AppTab.entries, RouteConfig)
+
+    KnitScaffold(
+        navigator = navigator,
+        tabs = {
+            tab(AppTab.Home, "Home", KnitIcon(sfSymbol = "house", vector = HomeVector))
+            tab(AppTab.Settings, "Settings", KnitIcon(sfSymbol = "gearshape", vector = SettingsVector))
+        },
+        entryProvider = entryProvider {
+            entry<Route.Home> { HomeScreen(onOpen = { navigator.navigate(Route.Detail(it)) }) }
+            entry<Route.Settings> { SettingsScreen() }
+            entry<Route.Detail> { DetailScreen(it) }
+        },
+        topBar = { key -> if (key is Route.Detail) KnitTopBar(title = "Item ${key.id}") else null },
+    )
+}
+```
+
+On iOS the entry point stays `ComposeUIViewController { App() }`.
+
+## Screens
+
+The native bars on iOS float above the content, the Material bars on Android sit next to it. A screen does not
+have to know: `knitSafePadding()` is everything it has to keep clear, system bars and cutout included.
+
+```kotlin
+// Scrolls behind the bars, which is what makes the glass on iOS look right.
+LazyColumn(contentPadding = knitSafePadding()) { ... }
+
+// Screens that do not scroll, snackbar hosts, bottom buttons.
+Column(Modifier.fillMaxSize().knitSafeArea()) { ... }
+```
+
+The keyboard is not part of it. Use `imePadding()` as usual, and do not consume the IME inset around the scaffold.
+
+| Need | Use |
+|---|---|
+| Title or actions that depend on the screen's state | `KnitTopBarOverride(KnitTopBar(title, actions))` inside the screen |
+| A sheet or dialog that the iOS tab bar must not cover | `KnitTabBarHidden()` next to it |
+| Routes without a common sealed parent | `knitRoutes { route<A>(); route<B>() }` |
+| Titles from resources | the `tabs` block is composable, call `stringResource` in it |
+
+## Behavior
+
+- One back stack per tab. The stack and the saved state of an inactive tab are kept.
+- Tapping the current tab returns to its start screen.
+- Back pops the screen, then leads to the first tab, then leaves the app.
+- The tab bar is only shown on a tab's start screen and hides while the keyboard is open.
+
+## Own design on Android, Desktop and Web
+
+iOS always shows the system bars. On the other platforms the Material bars follow the surrounding
+`MaterialTheme`. Change single colors with `colors = KnitDefaults.colors(...)`, or draw the bars yourself with the
+`tabBar` and `topBarContent` parameters of `KnitScaffold`.
+
+## Android setup
+
+Predictive back needs `android:enableOnBackInvokedCallback="true"` on the `<application>` in the manifest.
 
 ## Modules
 
