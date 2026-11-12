@@ -235,12 +235,20 @@ Geprüft unter Windows: `:knit:desktopTest` (35 Tests, davon neu: Sichern und Wi
 `:knit:compileKotlinWasmJs`, `:knit:lint`, `:androidApp:lintDebug`, `:androidApp:assembleDebug`.
 
 Ungeprüft:
-- Alles auf iOS: Der geänderte `KnitPlatformShell.ios.kt` wurde nicht einmal kompiliert (kein Mac, der iOS-Job läuft
-  erst beim PR nach `main`). Offen ist, ob Höhe 0 den toten Zurück-Button behebt, ob die Leisten beim Wiedereinblenden
-  sauber erscheinen und ob die Werte von `knitSafePadding()` auf dem iPhone stimmen.
+- iOS auf einem Gerät: Ein manueller CI-Lauf auf dem Branch (2026-11-12, Xcode 26) ist grün, `iosSimulatorArm64Test`
+  und `xcodebuild` laufen, die IPA wurde gebaut. Die Screenshots zeigen den Start-Screen (Liste beginnt unter der
+  Statusleiste und läuft hinter der Glass-Leiste durch) und die Detailseite mit Zurück-Button, Titel und Action. Offen
+  bleibt alles, was Bewegung oder Berührung braucht: ob Höhe 0 den toten Zurück-Button behebt, ob die Leisten beim
+  Wiedereinblenden sauber erscheinen, das Listenende über der Tab-Leiste und Geräte mit anderen Insets.
 - `knitSafePadding()` auf einem Android-Gerät. Im Desktop-Test gibt es keine System-Insets, dort ist der Wert immer 0.
 - Sichern und Wiederherstellen mit `knitRoutes<Route>()` lief nur auf dem Desktop. Die Android-Host-Tests haben kein
   echtes `Bundle`, ein Prozess-Tod auf einem Gerät wurde nicht getestet.
+
+Fehler auf dem iPhone (Manuel, 2026-11-12, Dark Mode): Kommt die App aus dem Hintergrund zurück, zeigt die Tab-Leiste
+den hellen Stil, bis ein Tab gewechselt wird. Ursache unbekannt. Fix-Versuch, auf dem Gerät noch nicht gesehen: Die
+Leiste bekommt `overrideUserInterfaceStyle` aus `isSystemInDarkTheme()` statt den Stil selbst aufzulösen, und bei
+`UIApplicationDidBecomeActiveNotification` sowie 400 ms danach werden ihre Items neu gesetzt. Unter Windows nur
+kompiliert (`:knit:compileKotlinIosSimulatorArm64` läuft dort dank klib-Cross-Compilation, linken und ausführen nicht).
 
 Bewusst nicht gemacht: Large Titles, Minimieren der Tab-Leiste beim Scrollen und ein `UINavigationController`-Backend.
 Das lässt sich ohne Gerät nicht beurteilen.
