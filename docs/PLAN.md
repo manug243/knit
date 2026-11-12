@@ -1,6 +1,6 @@
 # knit: Plan
 
-Stand: 2026-11-08
+Stand: 2026-11-12
 
 ## Status
 
@@ -210,6 +210,40 @@ Parameter, die iOS ignoriert:
 Dazu ein `wasmJs`-Target, damit Apps mit Web-Ziel (WeList) knit einbinden können. Es nutzt die Material-Leisten, der
 Web-Test ist nur ein Kompilieren (`:knit:compileKotlinWasmJs`), die CI führt es aus. Ungeprüft: Verhalten im Browser,
 iOS-Build mit den geänderten Signaturen.
+
+## Weniger Aufwand für Nutzer (2026-11-12, Branch `feature/less-boilerplate`)
+
+Ziel: mit möglichst wenig Code auf beiden Plattformen das native Aussehen und Verhalten. Die Befunde aus dem
+WeList-Probelauf (Insets und Abstände von Hand, toter Zurück-Button) waren der Maßstab.
+
+- **`knitRoutes<Route>()`**: eine Zeile für eine `@Serializable` sealed Hierarchie statt einer `route<T>()`-Zeile pro
+  Screen. Keine Route kann mehr vergessen werden. Technisch steht der Serializer des sealed Typs als Standard-Serializer
+  für `NavKey` im Modul. Die Builder-Variante bleibt für Routen ohne gemeinsamen sealed Typ.
+- **`knitSafePadding()` und `Modifier.knitSafeArea()`**: ein Wert für alles, was ein Screen freihalten muss
+  (Systemleisten, Display-Cutout, knits Leisten). Vorher rechnete jeder Screen `safeDrawing` und
+  `LocalKnitContentPadding` selbst zusammen, und das Beispiel zählte dabei auf Android die Statusleiste unter der
+  Top-Bar doppelt. Die Tastatur ist bewusst nicht enthalten, `knitSafeArea()` markiert die Insets als verbraucht, damit
+  ein `imePadding()` weiter innen nicht doppelt zählt. `LocalKnitContentPadding` bleibt für Sonderfälle.
+- **Versteckte iOS-Leisten geben ihre Fläche frei**: Die `UIKitView`s von Navigations- und Tab-Leiste haben Höhe 0,
+  solange die Leiste ausgeblendet ist. Das ist der Versuch einer Lösung für den toten Zurück-Button aus dem
+  WeList-Probelauf. Die Annahme dahinter (die Hüllen-View des Interop schluckt Touches, auch wenn die Leiste selbst
+  keine annimmt) ist nicht belegt.
+- README mit Schnellstart, Example auf die neuen Helfer umgestellt.
+
+Geprüft unter Windows: `:knit:desktopTest` (35 Tests, davon neu: Sichern und Wiederherstellen eines Stacks mit
+`knitRoutes<Route>()`, Ablehnung fremder Keys, Safe-Padding im Scaffold), `:knit:testAndroidHostTest`,
+`:knit:compileKotlinWasmJs`, `:knit:lint`, `:androidApp:lintDebug`, `:androidApp:assembleDebug`.
+
+Ungeprüft:
+- Alles auf iOS: Der geänderte `KnitPlatformShell.ios.kt` wurde nicht einmal kompiliert (kein Mac, der iOS-Job läuft
+  erst beim PR nach `main`). Offen ist, ob Höhe 0 den toten Zurück-Button behebt, ob die Leisten beim Wiedereinblenden
+  sauber erscheinen und ob die Werte von `knitSafePadding()` auf dem iPhone stimmen.
+- `knitSafePadding()` auf einem Android-Gerät. Im Desktop-Test gibt es keine System-Insets, dort ist der Wert immer 0.
+- Sichern und Wiederherstellen mit `knitRoutes<Route>()` lief nur auf dem Desktop. Die Android-Host-Tests haben kein
+  echtes `Bundle`, ein Prozess-Tod auf einem Gerät wurde nicht getestet.
+
+Bewusst nicht gemacht: Large Titles, Minimieren der Tab-Leiste beim Scrollen und ein `UINavigationController`-Backend.
+Das lässt sich ohne Gerät nicht beurteilen.
 
 ## Befunde (Stand 2026-11-08, aus dem Auftrag)
 

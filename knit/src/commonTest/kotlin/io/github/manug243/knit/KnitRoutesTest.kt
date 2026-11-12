@@ -3,6 +3,7 @@ package io.github.manug243.knit
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -16,6 +17,11 @@ private data class RegisteredDetail(val id: Int) : NavKey
 private data object NotRegistered : NavKey
 
 class KnitRoutesTest {
+    @Test
+    fun sealedRoutesNeedASealedType() {
+        assertFailsWith<IllegalArgumentException> { knitRoutes<RegisteredHome>() }
+    }
+
     @Test
     fun registeredRoutesHaveASerializer() {
         val module = knitRoutes {

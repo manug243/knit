@@ -37,6 +37,8 @@ private const val TabFadeMillis = 180
  * the top the height of the navigation bar below the status bar, each while the bar is visible and
  * zero otherwise. On Android and Desktop the bars sit next to the content and this is zero.
  * The status bar inset itself is not part of the top value, add the system insets as usual.
+ *
+ * Most screens want [knitSafePadding] instead, which already contains the system insets.
  */
 public val LocalKnitContentPadding: androidx.compose.runtime.ProvidableCompositionLocal<PaddingValues> =
     staticCompositionLocalOf { PaddingValues(0.dp) }
@@ -186,7 +188,15 @@ internal expect fun KnitPlatformShell(
     content: @Composable () -> Unit,
 )
 
+/**
+ * Provides what the chrome covers ([chrome], see [LocalKnitContentPadding]) and the whole area a
+ * screen has to keep clear ([safe], see [knitSafePadding]).
+ */
 @Composable
-internal fun ProvideKnitContentPadding(padding: PaddingValues, content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalKnitContentPadding provides padding, content = content)
+internal fun ProvideKnitContentPadding(chrome: PaddingValues, safe: PaddingValues, content: @Composable () -> Unit) {
+    CompositionLocalProvider(
+        LocalKnitContentPadding provides chrome,
+        LocalKnitSafePadding provides safe,
+        content = content,
+    )
 }
