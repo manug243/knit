@@ -1,6 +1,7 @@
 package io.github.manug243.knit
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -10,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -345,6 +347,36 @@ class KnitScaffoldTest {
         // The tab item merges its icon and label, so the icon is only found in the unmerged tree.
         onNodeWithText("read in composition A", useUnmergedTree = true).assertExists()
         onNodeWithText("own icon", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun screensGetSafePaddingAndCanUseSafeArea() = runComposeUiTest {
+        var insideScaffold: PaddingValues? = null
+        setContent {
+            val navigator = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            KnitScaffold(
+                navigator = navigator,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider {
+                    entry<Page> { page ->
+                        insideScaffold = knitSafePadding()
+                        Text("page ${page.name}", modifier = Modifier.knitSafeArea())
+                    }
+                },
+            )
+        }
+        onNodeWithText("page a").assertExists()
+        // The desktop test window has no system insets and the Material bars sit next to the content.
+        assertEquals(PaddingValues(0.dp), insideScaffold)
+    }
+
+    @Test
+    fun safePaddingWorksOutsideAScaffold() = runComposeUiTest {
+        setContent { Text("alone", modifier = Modifier.knitSafeArea()) }
+        onNodeWithText("alone").assertExists()
     }
 
     @Test
