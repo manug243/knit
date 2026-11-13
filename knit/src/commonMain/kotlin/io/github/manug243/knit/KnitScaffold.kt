@@ -61,8 +61,8 @@ public val LocalKnitContentPadding: androidx.compose.runtime.ProvidableCompositi
  * Below a tab's start screen the bar also shows a back button that pops the screen. It is called
  * with the top of the current tab's stack, so it follows navigation and can read the key's arguments.
  * @param colors colors of the Material bars on Android, Desktop and Web. The default follows the
- * surrounding `MaterialTheme`, see [KnitDefaults.colors]. iOS ignores it, its native bars take
- * their look from the system.
+ * surrounding `MaterialTheme`, see [KnitDefaults.colors]. iOS keeps the system look of its native
+ * bars and only takes the accent color from it.
  * @param tabBar draws the tab bar yourself on Android, Desktop and Web, for example to match an own
  * design system. It gets the tabs and whether to draw a bottom bar or a side rail, and has to handle
  * the navigation bar inset itself. iOS ignores it and keeps the native bar.
@@ -91,15 +91,19 @@ public fun <T : KnitTab> KnitScaffold(
     // Tells every screen which key it shows, which KnitTopBarOverride needs.
     val currentEntryProvider by rememberUpdatedState(entryProvider)
     val currentTopBar by rememberUpdatedState(topBar)
-    val keyedEntryProvider: (NavKey) -> NavEntry<NavKey> = remember(navigator) {
-        { navKey ->
-            val entry = currentEntryProvider(navKey)
-            NavEntry(navKey, contentKey = entry.contentKey, metadata = entry.metadata) {
-                CompositionLocalProvider(LocalKnitEntryKey provides navKey) {
-                    EntryPadding(
-                        hasTopBar = (overrides[navKey] ?: currentTopBar(navKey)) != null,
-                        isTabRoot = navigator.tabs.any { it.root == navKey },
-                    ) { entry.Content() }
+    // One provider per tab, so every screen knows which tab it belongs to, which
+    // KnitTabReselectEffect needs.
+    val keyedEntryProviderFor: (T) -> (NavKey) -> NavEntry<NavKey> = remember(navigator) {
+        { tab ->
+            { navKey ->
+                val entry = currentEntryProvider(navKey)
+                NavEntry(navKey, contentKey = entry.contentKey, metadata = entry.metadata) {
+                    CompositionLocalProvider(LocalKnitEntryKey provides navKey, LocalKnitEntryTab provides tab) {
+                        EntryPadding(
+                            hasTopBar = (overrides[navKey] ?: currentTopBar(navKey)) != null,
+                            isTabRoot = navigator.tabs.any { it.root == navKey },
+                        ) { entry.Content() }
+                    }
                 }
             }
         }
@@ -120,7 +124,7 @@ public fun <T : KnitTab> KnitScaffold(
                     rememberSaveableStateHolderNavEntryDecorator(),
                     rememberViewModelStoreNavEntryDecorator(),
                 ),
-                entryProvider = keyedEntryProvider,
+                entryProvider = keyedEntryProviderFor(tab),
             )
         }
     }
@@ -136,7 +140,7 @@ public fun <T : KnitTab> KnitScaffold(
     val hideRequests = remember { TabBarHideRequests() }
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val barAllowed = !imeVisible && hideRequests.count == 0
-    val barItems = items.map { ShellItem(it.title, it.icon) }
+    val barItems = items.map { ShellItem(it.title, it.icon, it.badge) }
     val selectedIndex = items.indexOfFirst { it.tab == navigator.currentTab }
 
     val stack = navigator.currentBackStack
@@ -164,6 +168,7 @@ public fun <T : KnitTab> KnitScaffold(
         CompositionLocalProvider(
             LocalKnitTopBarOverrides provides overrides,
             LocalKnitTabBarHideRequests provides hideRequests,
+            LocalKnitReselects provides navigator.reselects,
         ) {
             // Switching tabs fades between the two screens, like the system tab bars do. It is not a
             // push or pop, so the content of a tab never slides.
@@ -180,6 +185,7 @@ public fun <T : KnitTab> KnitScaffold(
 internal class ShellItem(
     val title: String,
     val icon: KnitIcon,
+    val badge: String?,
 )
 
 /**

@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -48,10 +50,24 @@ private fun customTabBarState(
     wide: Boolean,
 ) = KnitTabBarState(
     items = items.mapIndexed { index, item ->
-        KnitTabBarItem(item.title, item.icon, selected = index == selectedIndex, onClick = { onSelect(index) })
+        KnitTabBarItem(item.title, item.icon, item.badge, selected = index == selectedIndex, onClick = { onSelect(index) })
     },
     wide = wide,
 )
+
+/** The icon of a tab with its badge, if it has one. */
+@Composable
+private fun BadgedIcon(item: ShellItem) {
+    val badge = item.badge
+    if (badge == null) {
+        item.icon.Content()
+    } else {
+        // An empty badge is a plain dot.
+        BadgedBox(badge = { if (badge.isEmpty()) Badge() else Badge { Text(badge) } }) {
+            item.icon.Content()
+        }
+    }
+}
 
 /**
  * Material 3 chrome for Android, Desktop and Web: a bottom bar below [RailBreakpoint], a rail from there on.
@@ -154,7 +170,7 @@ internal fun MaterialShell(
                                 NavigationRailItem(
                                     selected = index == selectedIndex,
                                     onClick = { onSelect(index) },
-                                    icon = { item.icon.Content() },
+                                    icon = { BadgedIcon(item) },
                                     label = { Text(item.title) },
                                     colors = NavigationRailItemDefaults.colors(
                                         selectedIconColor = colors.tabBarSelectedContent,
@@ -202,7 +218,7 @@ internal fun MaterialShell(
                                 NavigationBarItem(
                                     selected = index == selectedIndex,
                                     onClick = { onSelect(index) },
-                                    icon = { item.icon.Content() },
+                                    icon = { BadgedIcon(item) },
                                     label = { Text(item.title) },
                                     colors = NavigationBarItemDefaults.colors(
                                         selectedIconColor = colors.tabBarSelectedContent,
