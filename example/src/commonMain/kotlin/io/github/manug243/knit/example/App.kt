@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import io.github.manug243.knit.KnitAction
+import io.github.manug243.knit.KnitIcons
 import io.github.manug243.knit.KnitScaffold
 import io.github.manug243.knit.KnitTopBar
 import io.github.manug243.knit.knitSafeArea
@@ -57,9 +58,9 @@ fun App(openDetailOnStart: Boolean = false) {
             KnitScaffold(
                 navigator = navigator,
                 tabs = {
-                    tab(AppTab.Home, "Home", HomeIcon)
-                    tab(AppTab.Lists, "Lists", ListsIcon)
-                    tab(AppTab.Settings, "Settings", SettingsIcon)
+                    tab(AppTab.Home, "Home", KnitIcons.Home)
+                    tab(AppTab.Lists, "Lists", KnitIcons.List)
+                    tab(AppTab.Settings, "Settings", KnitIcons.Settings)
                 },
                 entryProvider = entryProvider {
                     entry<Route.Home> { StripeScreen("Home") { navigator.navigate(Route.Detail("Home", it)) } }
@@ -74,7 +75,7 @@ fun App(openDetailOnStart: Boolean = false) {
                         is Route.Detail -> KnitTopBar(
                             title = "${key.tab} ${key.index}",
                             actions = listOf(
-                                KnitAction("Next", NextIcon) {
+                                KnitAction("Next", KnitIcons.Add) {
                                     navigator.navigate(Route.Detail(key.tab, key.index + 1))
                                 },
                             ),
