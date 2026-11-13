@@ -52,7 +52,7 @@ public class KnitNavigator<T : KnitTab> internal constructor(
 
     // Carries a tap on the already selected tab to KnitTabReselectEffect. A flow because it is an
     // event, not state: a screen that appears later must not see a tap from before. No replay, and
-    // tryEmit never suspends, a tap while a handler is still running is simply dropped.
+    // tryEmit never suspends. A tap while a handler is still running cancels it and starts it again.
     internal val reselects = MutableSharedFlow<KnitTab>(extraBufferCapacity = 1)
 
     /**
@@ -68,18 +68,25 @@ public class KnitNavigator<T : KnitTab> internal constructor(
         }
     }
 
-    /** Opens [key] on top of the current tab. */
+    /** Opens [key] on top of the current tab. Does nothing if [key] is already the top screen. */
     public fun navigate(key: NavKey) {
-        currentBackStack.add(key)
+        push(currentBackStack, key)
+    }
+
+    // A key that is already on top is not added again. Two equal keys in a row would be the same
+    // screen twice, which a double tap on a list row or a deep link to the open screen would cause.
+    private fun push(stack: MutableList<NavKey>, key: NavKey) {
+        if (stack.lastOrNull() != key) stack.add(key)
     }
 
     /**
      * Deep link into a tab: switches to [tab] without popping it and opens [key] on top of its
-     * stack. Whatever the tab already showed stays below [key], so back leads there.
+     * stack. Whatever the tab already showed stays below [key], so back leads there. If [key] is
+     * already the top screen of [tab], it only switches the tab.
      */
     public fun navigate(tab: T, key: NavKey) {
         require(tab in tabs) { "Unknown tab $tab" }
-        stacks.getValue(tab).add(key)
+        push(stacks.getValue(tab), key)
         currentTab = tab
     }
 
