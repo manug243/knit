@@ -85,6 +85,7 @@ tab(AppTab.Inbox, "Inbox", KnitIcons.Notifications, badge = if (unread > 0) "$un
 | Common icons without icon code (SF Symbol on iOS, Material icon elsewhere) | `KnitIcons.Home`, `List`, `Search`, `Settings`, `Add`, `Share`, `Edit`, `Delete`, `Favorite`, `Person`, `Notifications`, `Info`, `Close`, `Check`, `More` |
 | A badge on a tab | `badge = "3"` in `tab(...)`, `null` shows none. A custom `tabBar` gets it as `KnitTabBarItem.badge` |
 | Tint of the native bars on iOS | `colors = KnitDefaults.colors(accent = Color(0xFF0A7AFF))`, other platforms ignore it |
+| Opaque screens during a push or pop | Every screen gets the theme background automatically. `colors = KnitDefaults.colors(screenBackground = ...)` changes it, `Color.Transparent` switches it off |
 | Scroll a list to the top when the current tab is tapped again | `KnitTabReselectEffect { listState.animateScrollToItem(0) }` inside the screen. Only runs on the tab's start screen, deeper screens pop as before |
 | A bottom sheet that the iOS tab bar must not cover | `KnitModalBottomSheet(onDismissRequest = { ... }) { ... }` |
 | Open a screen inside another tab (deep link, notification) | `navigator.navigate(AppTab.Settings, Route.Account)` |
