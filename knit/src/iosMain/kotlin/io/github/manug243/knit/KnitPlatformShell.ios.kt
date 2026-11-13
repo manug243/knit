@@ -336,7 +336,11 @@ private fun rememberForegroundCount(): Int {
  * sometimes missing. That cause is a hypothesis from the code, it was not seen in a debugger.
  */
 private class BarFader(parked: Boolean) {
-    /** True while the bar is faded out and moved off the screen. Read by the placement only. */
+    /**
+     * True while the bar is faded out and moved off the screen. The composition reads it to place the
+     * bar, and only [fade] and its completion write it. Because [fade] runs inside the `update` block,
+     * a change also reruns that block once, which then does nothing.
+     */
     var parked by mutableStateOf(parked)
         private set
 
