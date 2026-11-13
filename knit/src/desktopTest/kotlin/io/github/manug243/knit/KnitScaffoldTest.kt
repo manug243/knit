@@ -438,4 +438,142 @@ class KnitScaffoldTest {
         waitForIdle()
         onNodeWithText("page a-detail").assertExists()
     }
+
+    @Test
+    fun badgeIsShownAndUpdated() = runComposeUiTest {
+        var badge by mutableStateOf<String?>("3")
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon, badge = badge)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider { entry<Page> { Text("page ${it.name}") } },
+            )
+        }
+        onNodeWithText("3", useUnmergedTree = true).assertExists()
+        badge = "12"
+        waitForIdle()
+        onNodeWithText("3", useUnmergedTree = true).assertDoesNotExist()
+        onNodeWithText("12", useUnmergedTree = true).assertExists()
+        badge = null
+        waitForIdle()
+        onNodeWithText("12", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun customTabBarGetsBadge() = runComposeUiTest {
+        var seen: List<String?> = emptyList()
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon, badge = "7")
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider { entry<Page> { Text("page ${it.name}") } },
+                tabBar = { state -> seen = state.items.map { it.badge } },
+            )
+        }
+        runOnIdle { assertEquals(listOf<String?>("7", null), seen) }
+    }
+
+    private fun androidx.compose.ui.test.ComposeUiTest.showReselect(
+        fired: MutableList<String>,
+        onNavigator: (KnitNavigator<ScaffoldTab>) -> Unit,
+    ) {
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            onNavigator(nav)
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider {
+                    entry<Page> { page ->
+                        KnitTabReselectEffect { fired += page.name }
+                        Column {
+                            Text("page ${page.name}")
+                            Button(onClick = { nav.navigate(Page("${page.name}-detail")) }) {
+                                Text("open ${page.name}")
+                            }
+                        }
+                    }
+                },
+            )
+        }
+    }
+
+    @Test
+    fun reselectingTheTabAtItsStartScreenRunsTheEffect() = runComposeUiTest {
+        val fired = mutableListOf<String>()
+        showReselect(fired) {}
+        onNodeWithText("Tab A").performClick()
+        waitForIdle()
+        assertEquals(listOf("a"), fired)
+        onNodeWithText("Tab A").performClick()
+        waitForIdle()
+        assertEquals(listOf("a", "a"), fired)
+    }
+
+    @Test
+    fun switchingTabsDoesNotRunTheEffectAndOnlyTheTappedTabReacts() = runComposeUiTest {
+        val fired = mutableListOf<String>()
+        showReselect(fired) {}
+        onNodeWithText("Tab B").performClick()
+        waitForIdle()
+        assertEquals(emptyList(), fired)
+        onNodeWithText("Tab B").performClick()
+        waitForIdle()
+        assertEquals(listOf("b"), fired)
+    }
+
+    @Test
+    fun reselectingPopsADetailScreenInsteadOfRunningTheEffect() = runComposeUiTest {
+        val fired = mutableListOf<String>()
+        lateinit var navigator: KnitNavigator<ScaffoldTab>
+        showReselect(fired) { navigator = it }
+        onNodeWithText("open a").performClick()
+        waitForIdle()
+        onNodeWithText("page a-detail").assertExists()
+
+        // The bar is hidden below a start screen, so the tap on the tab comes from the navigator.
+        runOnIdle { navigator.select(ScaffoldTab.A) }
+        waitForIdle()
+        onNodeWithText("page a").assertExists()
+        assertEquals(emptyList(), fired)
+    }
+
+    @Test
+    fun modalBottomSheetHidesTheTabBar() = runComposeUiTest {
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider {
+                    entry<Page> {
+                        var sheet by remember { mutableStateOf(false) }
+                        if (sheet) {
+                            KnitModalBottomSheet(onDismissRequest = { sheet = false }) { Text("sheet content") }
+                        }
+                        Button(onClick = { sheet = true }) { Text("show sheet") }
+                    }
+                },
+            )
+        }
+        onNodeWithText("Tab A").assertExists()
+        onNodeWithText("show sheet").performClick()
+        waitForIdle()
+        onNodeWithText("sheet content").assertExists()
+        onNodeWithText("Tab A").assertDoesNotExist()
+    }
 }

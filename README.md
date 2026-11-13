@@ -74,17 +74,32 @@ The keyboard is not part of it. Use `imePadding()` as usual, and do not consume 
 | Routes without a common sealed parent | `knitRoutes { route<A>(); route<B>() }` |
 | Titles from resources | the `tabs` block is composable, call `stringResource` in it |
 
+## Icons, badges and more
+
+```kotlin
+tab(AppTab.Inbox, "Inbox", KnitIcons.Notifications, badge = if (unread > 0) "$unread" else null)
+```
+
+| Need | Use |
+|---|---|
+| Common icons without icon code (SF Symbol on iOS, Material icon elsewhere) | `KnitIcons.Home`, `List`, `Search`, `Settings`, `Add`, `Share`, `Edit`, `Delete`, `Favorite`, `Person`, `Notifications`, `Info`, `Close`, `Check`, `More` |
+| A badge on a tab | `badge = "3"` in `tab(...)`, `null` shows none. A custom `tabBar` gets it as `KnitTabBarItem.badge` |
+| Tint of the native bars on iOS | `colors = KnitDefaults.colors(accent = Color(0xFF0A7AFF))`, other platforms ignore it |
+| Scroll a list to the top when the current tab is tapped again | `KnitTabReselectEffect { listState.animateScrollToItem(0) }` inside the screen. Only runs on the tab's start screen, deeper screens pop as before |
+| A bottom sheet that the iOS tab bar must not cover | `KnitModalBottomSheet(onDismissRequest = { ... }) { ... }` |
+| Open a screen inside another tab (deep link, notification) | `navigator.navigate(AppTab.Settings, Route.Account)` |
+
 ## Behavior
 
 - One back stack per tab. The stack and the saved state of an inactive tab are kept.
-- Tapping the current tab returns to its start screen.
+- Tapping the current tab returns to its start screen. On the start screen it runs `KnitTabReselectEffect`.
 - Back pops the screen, then leads to the first tab, then leaves the app.
 - The tab bar is only shown on a tab's start screen and hides while the keyboard is open.
 
 ## Own design on Android, Desktop and Web
 
 iOS always shows the system bars. On the other platforms the Material bars follow the surrounding
-`MaterialTheme`. Change single colors with `colors = KnitDefaults.colors(...)`, or draw the bars yourself with the
+`MaterialTheme`. Change single colors with `colors = KnitDefaults.colors(...)` (on iOS only `accent` applies), or draw the bars yourself with the
 `tabBar` and `topBarContent` parameters of `KnitScaffold`.
 
 ## Android setup

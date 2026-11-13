@@ -4,6 +4,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -34,13 +38,38 @@ public class KnitIcon(
 }
 
 /** Receiver of the `tabs` block of [KnitScaffold]. */
-public class KnitTabsScope<T : KnitTab> internal constructor() {
+public class KnitTabsScope<T : KnitTab> internal constructor(
+    // A composable block restarts on its own when a state it reads changes, without the scaffold,
+    // and then runs again on the same scope. Declaring a tab a second time then replaces it.
+    private val redeclare: Boolean = false,
+) {
     internal val items: MutableList<KnitTabItem<T>> = mutableListOf()
 
-    /** Declares [tab] with its [title] and [icon]. The declaration order is the order in the bar. */
-    public fun tab(tab: T, title: String, icon: KnitIcon) {
-        require(items.none { it.tab == tab }) { "Tab $tab is declared twice" }
-        items += KnitTabItem(tab, title, icon)
+    // Tells the scaffold that a restarted block changed a tab, see tab().
+    internal var revision: Int by mutableIntStateOf(0)
+        private set
+
+    /**
+     * Declares [tab] with its [title] and [icon]. The declaration order is the order in the bar.
+     *
+     * @param badge text on the tab's icon, for example a count of unread items. `null` shows none.
+     * It can change at any time, the block runs again when a state it reads changes. iOS shows it
+     * as the `badgeValue` of the native item, the Material bar and rail as a `Badge`.
+     */
+    public fun tab(tab: T, title: String, icon: KnitIcon, badge: String? = null) {
+        val item = KnitTabItem(tab, title, icon, badge)
+        val index = items.indexOfFirst { it.tab == tab }
+        when {
+            index < 0 -> items += item
+            !redeclare -> throw IllegalArgumentException("Tab $tab is declared twice")
+            else -> {
+                val old = items[index]
+                items[index] = item
+                // Icons are often created inside the block, so they are compared by their symbol:
+                // comparing instances would invalidate the scaffold on every pass.
+                if (old.title != title || old.icon.sfSymbol != icon.sfSymbol || old.badge != badge) revision++
+            }
+        }
     }
 }
 
@@ -48,6 +77,7 @@ internal class KnitTabItem<T : KnitTab>(
     val tab: T,
     val title: String,
     val icon: KnitIcon,
+    val badge: String?,
 )
 
 internal fun <T : KnitTab> buildTabItems(block: KnitTabsScope<T>.() -> Unit): List<KnitTabItem<T>> =
@@ -56,7 +86,9 @@ internal fun <T : KnitTab> buildTabItems(block: KnitTabsScope<T>.() -> Unit): Li
 /** Like [buildTabItems], but the block is composable so it can read titles from resources. */
 @Composable
 internal fun <T : KnitTab> composeTabItems(block: @Composable KnitTabsScope<T>.() -> Unit): List<KnitTabItem<T>> {
-    val scope = KnitTabsScope<T>()
+    val scope = remember { KnitTabsScope<T>(redeclare = true) }
+    // Reading the revision makes the scaffold follow a block that restarts on its own.
+    scope.revision
     scope.block()
     return scope.items.toList()
 }
