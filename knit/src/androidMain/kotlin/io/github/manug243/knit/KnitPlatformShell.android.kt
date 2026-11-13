@@ -8,6 +8,8 @@ internal actual fun KnitPlatformShell(
     items: List<ShellItem>,
     selectedIndex: Int,
     barVisible: Boolean,
+    // Only matters where the bars float above the content.
+    @Suppress("UNUSED_PARAMETER") barAllowed: Boolean,
     onSelect: (Int) -> Unit,
     topBar: ShellTopBar?,
     style: ShellStyle,
