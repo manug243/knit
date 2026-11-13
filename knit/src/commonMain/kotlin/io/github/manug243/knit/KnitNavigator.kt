@@ -11,12 +11,14 @@ import androidx.compose.runtime.setValue
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.coroutines.flow.MutableSharedFlow
 
 /**
  * Navigation state for an app with tabs: one back stack per tab, Navigation 3 keys as destinations.
  *
  * Behavior:
- * - Selecting the current tab again pops it to its start screen.
+ * - Selecting the current tab again pops it to its start screen. On the start screen itself it
+ *   runs the [KnitTabReselectEffect] of the screen.
  * - [back] pops the current stack. On a tab's start screen it returns to the home tab,
  *   and on the home tab's start screen it returns false so the app may close.
  * - The stacks of inactive tabs are kept, so a screen opened in one tab survives a visit to another.
@@ -48,11 +50,19 @@ public class KnitNavigator<T : KnitTab> internal constructor(
     /** True on the start screen of the current tab. The native tab bar is only shown here. */
     public val isAtTabRoot: Boolean get() = currentBackStack.size <= 1
 
-    /** Switches to [tab]. Selecting the current tab again returns to its start screen. */
+    // Carries a tap on the already selected tab to KnitTabReselectEffect. A flow because it is an
+    // event, not state: a screen that appears later must not see a tap from before. No replay, and
+    // tryEmit never suspends, a tap while a handler is still running is simply dropped.
+    internal val reselects = MutableSharedFlow<KnitTab>(extraBufferCapacity = 1)
+
+    /**
+     * Switches to [tab]. Selecting the current tab again returns to its start screen. When it is
+     * already there, there is nothing to pop and [KnitTabReselectEffect] of the screen runs instead.
+     */
     public fun select(tab: T) {
         require(tab in tabs) { "Unknown tab $tab" }
         if (tab == currentTab) {
-            popToRoot()
+            if (isAtTabRoot) reselects.tryEmit(tab) else popToRoot()
         } else {
             currentTab = tab
         }
@@ -61,6 +71,16 @@ public class KnitNavigator<T : KnitTab> internal constructor(
     /** Opens [key] on top of the current tab. */
     public fun navigate(key: NavKey) {
         currentBackStack.add(key)
+    }
+
+    /**
+     * Deep link into a tab: switches to [tab] without popping it and opens [key] on top of its
+     * stack. Whatever the tab already showed stays below [key], so back leads there.
+     */
+    public fun navigate(tab: T, key: NavKey) {
+        require(tab in tabs) { "Unknown tab $tab" }
+        stacks.getValue(tab).add(key)
+        currentTab = tab
     }
 
     /** Pops the current screen. Does nothing on a start screen. Returns whether something was popped. */
