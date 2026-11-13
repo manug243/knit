@@ -356,6 +356,25 @@ Kandidaten sind die iOS-Hülle (`KnitPlatformShell.ios.kt`, Overlay und Top-Bar-
 `decorateEntry` bei jeder Recomposition neue `NavEntry`-Objekte an `NavDisplay` gibt (das ist Navigation-3-Verhalten
 und war schon vor dem Provider-Umbau so). Ohne das Video lässt sich nicht sagen, was genau falsch aussieht.
 
+### Nachtrag: Video ausgewertet (2026-11-13)
+
+Das Video zeigte zwei echte Fehler, beide im Scaffold und nicht der Provider:
+
+- **Durchsichtige Screens.** Ein Screen hatte keinen eigenen Hintergrund, das `Surface` der Demo liegt außerhalb von
+  `KnitScaffold`. Beim Push waren beide Screens übereinander sichtbar, bis der alte entfernt wurde. Fix: jeder Eintrag
+  bekommt im Wrapper einen deckenden Hintergrund über den ganzen Bereich (auch unter den Leisten), Farbe
+  `KnitColors.screenBackground` (Default `MaterialTheme.colorScheme.background`, alle Plattformen,
+  `Transparent`/`Unspecified` schaltet ihn ab). Test `everyScreenHasAnOpaqueBackground` (Pixelprüfung per
+  `captureToImage` auf dem Desktop).
+- **Abgehender Screen springt beim Pop.** `KnitTopBarOverride` wird entfernt, sobald der Key aus jedem Back Stack ist,
+  also zu Beginn des Pops, während der Screen noch rausanimiert. Sein Padding verlor dadurch die Höhe der Top-Bar.
+  Fix: ein Screen merkt sich, ob er eine Top-Bar hatte, solange er im Back Stack liegt, und behält diesen Wert, sobald er
+  ihn verlassen hat. Overrides bleiben nicht länger bestehen. Test `poppedScreenKeepsItsTopBarPaddingWhileItLeaves`
+  schlägt ohne den Fix fehl (geprüft).
+
+Ungeprüft: beides auf dem Gerät. Nicht angefasst: der erste Frame eines Push, in dem ein per Override gesetzter Titel
+erst nach dem ersten Composing greift (Padding dort kurz ohne Top-Bar).
+
 ## Befunde (Stand 2026-11-08, aus dem Auftrag)
 
 **knit:** unverändertes KMP-Wizard-Template (`composeApp`, `iosApp`), `main` und `develop` identisch. Versionen dort:
