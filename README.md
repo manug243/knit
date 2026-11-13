@@ -1,11 +1,28 @@
 # knit
 
+[![CI](https://github.com/manug243/knit/actions/workflows/ci.yml/badge.svg)](https://github.com/manug243/knit/actions/workflows/ci.yml)
+
 Native iOS and Android navigation chrome for Compose Multiplatform, built on Navigation 3.
 
 One Compose tree, one navigation state, no Swift. iOS gets a real `UITabBar` and `UINavigationBar` (Liquid Glass
 when built with the iOS 26 SDK), Android gets Material 3 bars with a rail from 600 dp and predictive back.
 
-Work in progress, not published yet.
+## Status
+
+Work in progress, not published yet. The first release will be `0.1.0` on Maven Central as
+`io.github.manug243:knit`. Until then the API can still change. See the [changelog](CHANGELOG.md).
+
+The native iOS bars were checked on an iPhone with iOS 26. On Android the tabs, the top bar and back were checked on a
+Pixel, the newer additions only in tests. The web target compiles but has not been tried in a browser.
+
+## Compatibility
+
+| knit | Kotlin | Compose Multiplatform | Navigation 3 | Android `minSdk` |
+| --- | --- | --- | --- | --- |
+| `0.1.0` (unreleased) | 2.3.21 | 1.12.2 | 1.1.2 | 24 |
+
+Targets: Android, Desktop (JVM), iOS (`iosArm64`, `iosSimulatorArm64`) and Web (`wasmJs`). Liquid Glass needs an app
+built with the iOS 26 SDK (Xcode 26).
 
 ## Quick start
 
@@ -125,7 +142,28 @@ Run it with `./gradlew :example:run` on the desktop or `./gradlew :androidApp:in
 
 ## Modules
 
-- `knit`: the library
-- `example`: shared demo app (Android, Desktop, iOS)
-- `androidApp`: Android launcher for the demo
-- `iosApp`: Xcode project for the demo
+| Module | Purpose |
+| --- | --- |
+| `knit` | The library |
+| `example` | Shared demo app "Pantry" (Android, Desktop, iOS) |
+| `androidApp` | Android launcher for the demo |
+| `iosApp` | Xcode project for the demo |
+
+## Build
+
+```shell
+./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:compileKotlinWasmJs
+./gradlew :knit:lint :androidApp:lintDebug :androidApp:assembleDebug
+```
+
+The project requires JDK 21 and Android SDK platform 37. The iOS tests (`./gradlew :knit:iosSimulatorArm64Test`) and
+the iOS demo need macOS with Xcode 26.
+
+## Contributing
+
+Bug reports, ideas and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request,
+and use [Discussions](https://github.com/manug243/knit/discussions) for questions.
+
+## License
+
+knit is available under the Apache License 2.0. See [LICENSE](LICENSE).

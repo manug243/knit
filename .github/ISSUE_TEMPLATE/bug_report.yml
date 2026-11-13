@@ -1,0 +1,80 @@
+name: Bug report
+description: Report a problem with knit
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please search existing issues first. For usage questions, use [Discussions](https://github.com/manug243/knit/discussions) instead.
+
+  - type: input
+    id: library-version
+    attributes:
+      label: Library version
+      description: The `knit` version or commit you use, for example `0.1.0`.
+      placeholder: 0.1.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Where the bug happens. Select all that apply.
+      multiple: true
+      options:
+        - Android
+        - Desktop
+        - iOS
+        - Web
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS version and device
+      description: For example `iOS 26.1, iPhone 16` or `Android 16, Pixel 9`. The look of the native iOS bars depends on the iOS version.
+    validations:
+      required: false
+
+  - type: input
+    id: compose-version
+    attributes:
+      label: Compose Multiplatform version
+      placeholder: 1.12.2
+    validations:
+      required: true
+
+  - type: input
+    id: kotlin-version
+    attributes:
+      label: Kotlin version
+      placeholder: 2.3.21
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the actual behaviour.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: Describe what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: A minimal code snippet or a small project that shows the problem. Remove unrelated code.
+      render: kotlin
+    validations:
+      required: true
