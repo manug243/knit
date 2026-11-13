@@ -1,42 +1,44 @@
 package io.github.manug243.knit.example
 
 import androidx.navigation3.runtime.NavKey
-import androidx.savedstate.serialization.SavedStateConfiguration
 import io.github.manug243.knit.KnitTab
+import io.github.manug243.knit.knitRoutes
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
 
+/** Every screen of the demo. Arguments are ids, the data itself lives in [PantryStore]. */
 @Serializable
 sealed interface Route : NavKey {
-    @Serializable
-    data object Home : Route
-
     @Serializable
     data object Lists : Route
 
     @Serializable
+    data object Inbox : Route
+
+    @Serializable
+    data object Search : Route
+
+    @Serializable
     data object Settings : Route
 
-    /** A screen below a tab, opened by tapping a stripe. The bar is hidden here. */
+    /** Second level of the Lists tab: the items of one list. */
     @Serializable
-    data class Detail(val tab: String, val index: Int) : Route
+    data class ListDetail(val listId: Int) : Route
+
+    /** Third level of the Lists tab. Has no knit top bar on purpose, see [ItemDetailScreen]. */
+    @Serializable
+    data class ItemDetail(val itemId: Int) : Route
+
+    /** Second level of the Settings tab. */
+    @Serializable
+    data object About : Route
 }
 
 enum class AppTab(override val root: NavKey) : KnitTab {
-    Home(Route.Home),
     Lists(Route.Lists),
+    Inbox(Route.Inbox),
+    Search(Route.Search),
     Settings(Route.Settings),
 }
 
-/** Needed so the back stacks can be saved on iOS, where Navigation 3 has no reflection. */
-val RouteSavedStateConfiguration = SavedStateConfiguration {
-    serializersModule = SerializersModule {
-        polymorphic(NavKey::class) {
-            subclass(Route.Home::class, Route.Home.serializer())
-            subclass(Route.Lists::class, Route.Lists.serializer())
-            subclass(Route.Settings::class, Route.Settings.serializer())
-            subclass(Route.Detail::class, Route.Detail.serializer())
-        }
-    }
-}
+/** Lets the back stacks be saved. Covers every subclass of [Route], nothing to register per screen. */
+val RouteSavedStateConfiguration = knitRoutes<Route>()

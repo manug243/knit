@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Manual run of the whole workflow, including the iOS job, for example to get a fresh IPA.
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -26,11 +28,13 @@ jobs:
       - name: Install Android SDK platform
         run: sdkmanager "platforms;android-37.0"
       - name: Verify library and example
-        run: ./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:lint :example:compileKotlinDesktop :androidApp:lintDebug :androidApp:assembleDebug
+        run: ./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:lint :knit:compileKotlinWasmJs :example:compileKotlinDesktop :androidApp:lintDebug :androidApp:assembleDebug
 
   ios:
     # iOS only runs when develop is promoted to main.
-    if: github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref == 'develop'
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref == 'develop')
     # Liquid Glass needs the iOS 26 SDK, so this job pins a runner image that ships Xcode 26.
     runs-on: macos-26
     steps:
@@ -72,3 +76,28 @@ jobs:
           name: ios-screenshots
           path: build/ios-screenshots
           if-no-files-found: warn
+      # Unsigned on purpose: AltStore (or another sideloading tool) signs it with the tester's own Apple ID.
+      - name: Build unsigned IPA for devices
+        run: |
+          xcodebuild build \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/ios-device \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+          APP=build/ios-device/Build/Products/Release-iphoneos/knit.app
+          test -d "$APP"
+          mkdir -p build/ipa/Payload
+          cp -R "$APP" build/ipa/Payload/
+          (cd build/ipa && zip -qry knit-unsigned.ipa Payload)
+          unzip -l build/ipa/knit-unsigned.ipa | tail -1
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v7
+        with:
+          name: knit-unsigned-ipa
+          path: build/ipa/knit-unsigned.ipa
+          if-no-files-found: error

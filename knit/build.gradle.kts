@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
@@ -23,6 +25,9 @@ kotlin {
     jvm("desktop")
     iosArm64()
     iosSimulatorArm64()
+    // Only so that apps with a web target can depend on knit. The web gets the plain Material chrome.
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs { browser() }
 
     sourceSets {
         commonMain.dependencies {
@@ -31,7 +36,7 @@ kotlin {
             api(libs.navigation3.ui)
             api(libs.savedstate)
             implementation(libs.compose.mp.animation)
-            implementation(libs.compose.mp.ui.backhandler)
+            implementation(libs.navigationevent.compose)
             implementation(libs.compose.mp.foundation)
             implementation(libs.compose.mp.material3)
             implementation(libs.lifecycle.viewmodel.navigation3)
