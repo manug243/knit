@@ -4,7 +4,9 @@ Compose-Multiplatform-Library, mit der Entwickler auf iOS und Android mit wenig 
 OS-Navigation bekommen, aufgebaut auf Navigation 3. iOS bekommt eine echte Liquid-Glass-Bottom-Navigation
 und möglichst auch eine native Back-/Top-Navigation. Nutzer der Library schreiben kein Swift.
 
-Phasen, Befunde, Risiken, offene Punkte und Status stehen in [docs/PLAN.md](docs/PLAN.md).
+Phasen, Befunde, Risiken, offene Punkte und Status stehen in `docs/PLAN.md`. Die Datei liegt nur lokal und ist in der
+`.gitignore`, sie wird nicht committet. Fehlt sie (frischer Clone, Worktree), bei Manuel nachfragen statt sie neu
+anzulegen.
 
 ## Regeln
 
@@ -13,7 +15,7 @@ Phasen, Befunde, Risiken, offene Punkte und Status stehen in [docs/PLAN.md](docs
 - Pushen und PRs nur nach Rückfrage bei Manuel.
 - Gemergte Branches außer `main` und `develop` werden auf GitHub und lokal gelöscht (Details in der globalen
   `~/.claude/CLAUDE.md`). `delete_branch_on_merge` ist im Repo ausgeschaltet, `develop` darf nie verschwinden.
-- `docs/PLAN.md` nach jeder abgeschlossenen Phase aktualisieren.
+- `docs/PLAN.md` nach jeder abgeschlossenen Phase aktualisieren, aber nie committen (`git add -f` ist tabu).
 - Nach jeder Phase kurz berichten: was läuft, was ungeprüft ist.
 - `https://github.com/AMiketta/cmp-ios-chrome` gehört einem Kollegen und ist strikt read-only: keine Pushes,
   Issues, PRs oder Kommentare. Ideen übernehmen ist erlaubt. Der Code steht unter MIT, bei wörtlicher Übernahme
