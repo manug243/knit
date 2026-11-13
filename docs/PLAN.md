@@ -227,7 +227,8 @@ WeList-Probelauf (Insets und Abstände von Hand, toter Zurück-Button) waren der
 - **Versteckte iOS-Leisten geben ihre Fläche frei**: Die `UIKitView`s von Navigations- und Tab-Leiste haben Höhe 0,
   solange die Leiste ausgeblendet ist. Das ist der Versuch einer Lösung für den toten Zurück-Button aus dem
   WeList-Probelauf. Die Annahme dahinter (die Hüllen-View des Interop schluckt Touches, auch wenn die Leiste selbst
-  keine annimmt) ist nicht belegt.
+  keine annimmt) ist nicht belegt. Später ersetzt durch Parken außerhalb des Bildschirms, siehe „Tab-Leiste beim
+  Wiedereinblenden“.
 - README mit Schnellstart, Example auf die neuen Helfer umgestellt.
 
 Geprüft unter Windows: `:knit:desktopTest` (35 Tests, davon neu: Sichern und Wiederherstellen eines Stacks mit
@@ -374,6 +375,69 @@ Das Video zeigte zwei echte Fehler, beide im Scaffold und nicht der Provider:
 
 Ungeprüft: beides auf dem Gerät. Nicht angefasst: der erste Frame eines Push, in dem ein per Override gesetzter Titel
 erst nach dem ersten Composing greift (Padding dort kurz ohne Top-Bar).
+
+## Tab-Leiste beim Wiedereinblenden (2026-11-13, Branch `claude/ios-bar-reappear-448377`)
+
+Zwei Befunde von Manuel auf dem iPhone (iOS 26, Pantry), beide beim Zurückkommen der Tab-Leiste nach einer Detailseite:
+1. Die Glass-Hervorhebung des gewählten Tabs fährt beim Einblenden von links herein, statt einfach da zu sein.
+2. Ab und zu, nicht zuverlässig nachstellbar, zeigt die Leiste nach einem Screen-Wechsel nur Icons ohne Titel.
+
+Ursache, soweit ohne Gerät feststellbar: Seit „Versteckte iOS-Leisten geben ihre Fläche frei“ hatten beide versteckten
+`UIKitView`s Höhe 0. Beim Wiedereinblenden wuchs der Rahmen von 0 auf volle Höhe, während der Fade lief. Im Quellcode von
+CMP 1.12.2 (`UIKitInteropElementHolder`, `InteropViewHolder`) laufen der `update`-Block und die neuen Rahmen im selben
+`CATransaction` beim nächsten Compose-Frame, der Block zuerst. Der Fade startete also, solange die Leiste noch 0 hoch war,
+danach legte UIKit sie aus einem Rahmen der Höhe 0 neu aus. Dass genau das die Pille wandern lässt und die Titel
+verschluckt (ein `UITabBar` ohne Platz wählt ein kompaktes Layout), ist eine Hypothese. Ein zweiter Kandidat für die
+Titel: Kommt die App auf einer Detailseite aus dem Hintergrund, setzte der Neuaufbau (`generation`) die Items in eine
+Leiste der Höhe 0.
+
+Bestätigt hat der Quellcode dagegen den Grund für die freie Fläche: Die Overlay-Eingabe-View von CMP fragt Compose,
+welche Interop-View unter dem Finger liegt, und ruft `hitTest` auf deren Hüllen-View auf. Die Hülle hat
+`userInteractionEnabled = true` und antwortet mit sich selbst, wenn die Leiste die Berührung ablehnt. Ein Compose-Button
+unter einer unsichtbaren Leiste wäre damit tot. Die Fläche muss also frei bleiben. Auf dem Gerät (Manuel,
+2026-11-13): Mit dem Build, in dem die versteckte Navigationsleiste Höhe 0 hat, funktioniert der Compose-Zurück-Button
+oben links in Item detail. Das zeigt nur, dass der Button geht, wenn die Leiste ihre Fläche freigibt. Dass er sonst tot
+wäre, zeigt es nicht, ein Build ohne Freigabe wurde nicht getestet. Die Freigabe bleibt deshalb Pflicht, für die
+Navigationsleiste oben wie für die Tab-Leiste unten.
+
+Fix in `KnitPlatformShell.ios.kt`:
+- Beide Leisten haben immer ihre volle Größe. Eine versteckte Leiste wird erst nach dem Ende ihres Fade-outs aus dem
+  Bildschirm geschoben (Tab-Leiste nach unten, Navigationsleiste nach oben, per `Modifier.offset`) und ist wieder an
+  ihrem Platz, sobald sie sichtbar sein soll, im selben Frame, in dem das Fade-in beginnt. CMP setzt den Rahmen in
+  `performWithoutAnimation`, und weil sich nur die Position ändert, wird die Leiste nicht neu ausgelegt.
+- `BarFader` animiert nur die Alpha. Ein Zähler sorgt dafür, dass nur der letzte Fade die Leiste parken darf, denn
+  UIView-Animationen sind additiv und ein unterbrochenes Fade-out meldet sein Ende trotzdem.
+- Vor dem Fade-in wird die Leiste ohne Animation ausgelegt (`setNeedsLayout`, `layoutIfNeeded`). Items und Auswahl
+  werden ohne Animation gesetzt, solange die Leiste versteckt ist oder gerade zurückkommt, und bei jedem Neuaufbau.
+- Die Titel werden bei jedem `update` mit den nativen Items verglichen und bei Abweichung gesetzt, wie die Badges.
+- Nachtrag nach einem Screenshot vom iPhone (Settings-Tab, Dark Mode, Leiste in voller Größe und an ihrem Platz, eine
+  Snackbar darüber): Die drei nicht gewählten Tabs zeigen nur Icons, der gewählte Titel ist zu „Se…“ gekürzt, die
+  Pille hat normale Größe. Das ist kein zu kleiner Rahmen, sondern ein Item-Layout für fast keine Breite, das auch bei
+  voller Größe stehen blieb. Ein Kandidat neben dem Layout bei Höhe 0: Die Höhe wurde bei jedem `update` mit
+  `sizeThatFits(CGSizeMake(0.0, 0.0))` gemessen, also für Breite 0. Ob `sizeThatFits` so ein Layout in den Items
+  hinterlässt, ist eine Hypothese. Jetzt wird mit der echten Breite gemessen und nur, wenn die Leiste schon eine hat.
+  Außerdem verlässt sich der Code nicht mehr darauf, dass UIKit von selbst neu auslegt: Nach neuen Items (auch beim
+  Neuaufbau über `generation`) und vor jedem Fade-in wird die Leiste von Hand ohne Animation ausgelegt. Hat sie dabei
+  noch keine Größe (erster Frame, CMP setzt den Rahmen erst nach dem `update`-Block), passiert das direkt danach über
+  die Main-Queue.
+- `overrideUserInterfaceStyle` und der Neuaufbau bei Rückkehr in den Vordergrund bleiben unverändert.
+
+Geprüft unter Windows: `:knit:compileKotlinIosSimulatorArm64`, `:example:compileKotlinIosSimulatorArm64` (nur
+kompiliert, ohne Warnungen), `:knit:desktopTest`, `:knit:testAndroidHostTest` (mit `--rerun-tasks` frisch gelaufen). Auf einem Gerät oder im Simulator nicht gesehen, nichts gelinkt oder ausgeführt.
+
+Auf dem iPhone zu prüfen:
+- Pille: Detailseite öffnen und per Zurück-Button und per Swipe-Back verlassen. Die Hervorhebung muss schon an ihrem Platz
+  sein und nur mit einblenden. Fährt sie weiterhin herein, ist die Größen-Hypothese widerlegt, denn die Größe ändert
+  sich nicht mehr. Nächster Verdacht wäre dann, dass die Glass-Leiste ihre Auswahl selbst animiert, wenn die Alpha von 0
+  auf 1 geht.
+- Titel: mehrmals zwischen Tabs und Detailseiten wechseln. Gezielt: auf einer Detailseite die App in den Hintergrund
+  schicken, zurückholen und zurückgehen, auch im Dark Mode. Außerdem den Fall vom Screenshot: im Settings-Tab eine
+  Snackbar auslösen. Die Titel müssen immer da und ungekürzt sein.
+- Schnelles Hin und Her: Detailseite öffnen und sofort (unter ¼ s) wieder schließen, mehrmals. Die Leiste darf nie
+  unsichtbar oder verschwunden bleiben. Das ist die neue Fehlerquelle dieses Ansatzes.
+- Freie Fläche: der Compose-Zurück-Button oben links in Item detail (`ItemDetailScreen`) reagiert. Die Fläche wird erst
+  nach dem Fade-out (0,25 s) frei, ein Tipp direkt nach dem Öffnen darf noch verschluckt werden. Ist der Button auch nach
+  einer Sekunde tot, hat das Parken nicht funktioniert.
 
 ## Befunde (Stand 2026-11-08, aus dem Auftrag)
 
