@@ -439,6 +439,37 @@ Auf dem iPhone zu prüfen:
   nach dem Fade-out (0,25 s) frei, ein Tipp direkt nach dem Öffnen darf noch verschluckt werden. Ist der Button auch nach
   einer Sekunde tot, hat das Parken nicht funktioniert.
 
+## Review vor dem PR (2026-11-13, Branch `feature/showcase`)
+
+Ein Review des gesamten Diffs gegen `develop` (eigene Session, nur lesend) fand einen Fehler, der vor dem PR behoben
+werden musste, und mehrere kleinere. Behoben:
+- **`tabs`-Block:** Der Scope wurde über Rekompositionen behalten und vergaß nie einen Tab. Fiel zur Laufzeit ein Tab
+  weg, lief der Scaffold in sein `require`, eine geänderte Reihenfolge kam nicht an, doppelte Tabs fielen nicht mehr
+  auf. Jetzt beginnt jeder Durchlauf des Scaffolds mit einem leeren Scope. Startet der Block allein neu (ein Badge
+  ändert sich), meldet der alte Scope das nur und der Scaffold sammelt neu ein.
+- **Hintergrund pro Screen:** immer dieselbe `Box`, nur der Modifier ist bedingt. Vorher hätte ein Wechsel zwischen
+  deckend und durchsichtig jeden Screen neu aufgebaut.
+- **Tab-Start:** Ob ein Screen der Start seines Tabs ist, hängt jetzt am eigenen Tab (`navKey == tab.root`). Der
+  Start-Key eines anderen Tabs als Detailseite bekam vorher den Abstand der Tab-Leiste.
+- **Gleicher Screen zweimal:** `navigate(key)` und `navigate(tab, key)` legen einen Key nicht noch einmal ab, wenn er
+  schon oben liegt (Doppeltipp, Deep Link auf die offene Seite).
+
+Geprüft: 54 Desktop-Tests (neu: Tabs fallen weg, kommen dazu, wechseln die Reihenfolge, Duplikat wirft, Badge aus
+einem Zustand, den nur der Block liest), Android-Host-Tests, Wasm, Lint, Android-Build, iOS-Compile. Die Fixes selbst
+liefen auf keinem Gerät, der Stand davor (Commit `0342ded`) wurde von Manuel auf dem iPhone für gut befunden.
+
+Offen aus dem Review, bewusst nicht in diesem PR:
+- `KnitTabReselectEffect` kann auf einer Detailseite auslösen, wenn der Tab ein zweites Mal getippt wird, während sie
+  noch herausanimiert.
+- Eine Änderung nur am Nicht-iOS-Icon eines Tabs zur Laufzeit erreicht die native iOS-Leiste nicht, dort zählt nur das
+  SF Symbol. Auf den anderen Plattformen kommt sie seit dem Fix oben an.
+- Gleiche Keys, die nicht direkt übereinander liegen (A, B, A), sind weiter möglich. Ob Navigation 3 damit umgehen
+  kann, ist ungeprüft.
+- `LocalKnitContentPadding` ist als `ProvidableCompositionLocal` öffentlich und damit von außen überschreibbar. Vor
+  0.1.0 entscheiden, ebenso die `@PublishedApi`-Teile von `KnitRoutes`.
+- Rail-Modus: Der Start-Inset der Rail wird nicht als verbraucht markiert (älter als dieser Branch).
+- `KnitSealedRoutesTest` prüft keine verschachtelte sealed Hierarchie.
+
 ## Befunde (Stand 2026-11-08, aus dem Auftrag)
 
 **knit:** unverändertes KMP-Wizard-Template (`composeApp`, `iosApp`), `main` und `develop` identisch. Versionen dort:

@@ -4,10 +4,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -39,15 +37,16 @@ public class KnitIcon(
 
 /** Receiver of the `tabs` block of [KnitScaffold]. */
 public class KnitTabsScope<T : KnitTab> internal constructor(
-    // A composable block restarts on its own when a state it reads changes, without the scaffold,
-    // and then runs again on the same scope. Declaring a tab a second time then replaces it.
-    private val redeclare: Boolean = false,
+    // Called when the block declares a tab after the scaffold has already read the result, see tab().
+    private val onLateDeclaration: () -> Unit,
 ) {
     internal val items: MutableList<KnitTabItem<T>> = mutableListOf()
+    private var closed = false
 
-    // Tells the scaffold that a restarted block changed a tab, see tab().
-    internal var revision: Int by mutableIntStateOf(0)
-        private set
+    /** The scaffold has taken the items. From now on the scope only reports that the block ran again. */
+    internal fun close() {
+        closed = true
+    }
 
     /**
      * Declares [tab] with its [title] and [icon]. The declaration order is the order in the bar.
@@ -57,19 +56,15 @@ public class KnitTabsScope<T : KnitTab> internal constructor(
      * as the `badgeValue` of the native item, the Material bar and rail as a `Badge`.
      */
     public fun tab(tab: T, title: String, icon: KnitIcon, badge: String? = null) {
-        val item = KnitTabItem(tab, title, icon, badge)
-        val index = items.indexOfFirst { it.tab == tab }
-        when {
-            index < 0 -> items += item
-            !redeclare -> throw IllegalArgumentException("Tab $tab is declared twice")
-            else -> {
-                val old = items[index]
-                items[index] = item
-                // Icons are often created inside the block, so they are compared by their symbol:
-                // comparing instances would invalidate the scaffold on every pass.
-                if (old.title != title || old.icon.sfSymbol != icon.sfSymbol || old.badge != badge) revision++
-            }
+        if (closed) {
+            // A composable block restarts on its own when a state it reads changes, without the
+            // scaffold, and then runs on the scope of the last pass. The scaffold is asked to run
+            // again and collects the tabs from scratch, so removed and reordered tabs are followed too.
+            onLateDeclaration()
+            return
         }
+        require(items.none { it.tab == tab }) { "Tab $tab is declared twice" }
+        items += KnitTabItem(tab, title, icon, badge)
     }
 }
 
@@ -80,15 +75,18 @@ internal class KnitTabItem<T : KnitTab>(
     val badge: String?,
 )
 
-internal fun <T : KnitTab> buildTabItems(block: KnitTabsScope<T>.() -> Unit): List<KnitTabItem<T>> =
-    KnitTabsScope<T>().apply(block).items.toList()
-
-/** Like [buildTabItems], but the block is composable so it can read titles from resources. */
+/**
+ * Runs the `tabs` block and returns what it declared. Every pass starts with an empty scope, so the
+ * result is exactly what the block declares now: a tab that is gone is gone, the order is the
+ * current one, and a tab declared twice is an error.
+ */
 @Composable
 internal fun <T : KnitTab> composeTabItems(block: @Composable KnitTabsScope<T>.() -> Unit): List<KnitTabItem<T>> {
-    val scope = remember { KnitTabsScope<T>(redeclare = true) }
-    // Reading the revision makes the scaffold follow a block that restarts on its own.
-    scope.revision
+    val lateDeclarations = remember { mutableIntStateOf(0) }
+    // Reading it makes the caller follow a block that restarted on its own.
+    lateDeclarations.intValue
+    val scope = KnitTabsScope<T>(onLateDeclaration = { lateDeclarations.intValue++ })
     scope.block()
+    scope.close()
     return scope.items.toList()
 }
