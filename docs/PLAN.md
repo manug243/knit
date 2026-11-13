@@ -334,6 +334,28 @@ der Item-detail-Testfall (Compose-Zurück-Button unter der ausgeblendeten Naviga
 Android-Gerät und im Light-Theme wurde nichts angesehen (nur Lint und Build). Die Snackbar-Platzierung und die
 Tastatur-Verschiebung auf Android sind ebenfalls nur aus dem Code abgeleitet.
 
+## Push-Animation: Provider-Verdacht widerlegt (2026-11-13, Branch `claude/stable-entries-6021a1`)
+
+Manuel meldete eine kaputte Push-Animation auf dem iPhone (Video kam nicht an). Verdacht: `keyedEntryProviderFor(tab)`
+liefert bei jeder Recomposition eine neue Lambda, `rememberDecoratedNavEntries` baue dadurch alle `NavEntry` neu und
+`NavDisplay` sehe mitten im Übergang frische Einträge.
+
+**Der Verdacht stimmt nicht.** In Navigation 3 (Runtime 1.1.7, `DecoratedNavEntries.kt`) steckt der `entryProvider` nicht
+im `remember`-Schlüssel, die Einträge hängen nur an `remember(backStack.toList())`. Der Provider läuft also nur, wenn
+sich der Back Stack ändert. Ein neuer Provider pro Recomposition kostet nichts, deshalb wurde am Scaffold nichts
+geändert. Die `entryDecorators`-Liste ist ebenfalls kein Schlüssel.
+
+Zwei Tests in `KnitScaffoldTest` halten das fest und bestehen mit und ohne Änderung: `screenSurvivesRecompositionsOfTheScaffold`
+(Badge und Top-Bar-Titel ändern sich, ein Screen mit `remember`-Zustand wird nicht neu erzeugt, der Provider läuft nicht
+erneut) und `bothScreensAreComposedWhenAPushStarts` (mit angehaltener Test-Uhr sind beim Push beide Screens
+komponiert). Ein Vergleich mit einem nackten `NavDisplay` im Test ergab dieselbe Dauer bis der alte Screen weg ist, auf
+dem Desktop ist `KnitScaffold` hier also nicht auffällig.
+
+Offen: die Ursache der Animation auf dem iPhone ist nicht gefunden. Ungeprüft ist alles auf einem Gerät. Nächste
+Kandidaten sind die iOS-Hülle (`KnitPlatformShell.ios.kt`, Overlay und Top-Bar-Wechsel während des Push) und, dass
+`decorateEntry` bei jeder Recomposition neue `NavEntry`-Objekte an `NavDisplay` gibt (das ist Navigation-3-Verhalten
+und war schon vor dem Provider-Umbau so). Ohne das Video lässt sich nicht sagen, was genau falsch aussieht.
+
 ## Befunde (Stand 2026-11-08, aus dem Auftrag)
 
 **knit:** unverändertes KMP-Wizard-Template (`composeApp`, `iosApp`), `main` und `develop` identisch. Versionen dort:
