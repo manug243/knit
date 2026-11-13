@@ -2,7 +2,10 @@ package io.github.manug243.knit
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Composable
@@ -16,6 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -91,6 +96,7 @@ public fun <T : KnitTab> KnitScaffold(
     // Tells every screen which key it shows, which KnitTopBarOverride needs.
     val currentEntryProvider by rememberUpdatedState(entryProvider)
     val currentTopBar by rememberUpdatedState(topBar)
+    val currentBackground by rememberUpdatedState(colors.screenBackground)
     // One provider per tab, so every screen knows which tab it belongs to, which
     // KnitTabReselectEffect needs.
     val keyedEntryProviderFor: (T) -> (NavKey) -> NavEntry<NavKey> = remember(navigator) {
@@ -99,10 +105,22 @@ public fun <T : KnitTab> KnitScaffold(
                 val entry = currentEntryProvider(navKey)
                 NavEntry(navKey, contentKey = entry.contentKey, metadata = entry.metadata) {
                     CompositionLocalProvider(LocalKnitEntryKey provides navKey, LocalKnitEntryTab provides tab) {
-                        EntryPadding(
-                            hasTopBar = (overrides[navKey] ?: currentTopBar(navKey)) != null,
-                            isTabRoot = navigator.tabs.any { it.root == navKey },
-                        ) { entry.Content() }
+                        // Opaque and outside the padding, so it also covers the area under the bars.
+                        ScreenBackground(currentBackground) {
+                            // A popped screen has left every back stack and its override is gone while it
+                            // still animates out. It keeps the padding it had.
+                            val lastHasTopBar = remember { BooleanHolder() }
+                            val inStack = navigator.tabs.any { navKey in navigator.backStack(it) }
+                            val hasTopBar = if (inStack) {
+                                ((overrides[navKey] ?: currentTopBar(navKey)) != null).also { lastHasTopBar.value = it }
+                            } else {
+                                lastHasTopBar.value
+                            }
+                            EntryPadding(
+                                hasTopBar = hasTopBar,
+                                isTabRoot = navigator.tabs.any { it.root == navKey },
+                            ) { entry.Content() }
+                        }
                     }
                 }
             }
@@ -205,6 +223,19 @@ internal expect fun KnitPlatformShell(
     modifier: Modifier,
     content: @Composable () -> Unit,
 )
+
+private class BooleanHolder {
+    var value: Boolean = false
+}
+
+@Composable
+private fun ScreenBackground(color: Color, content: @Composable () -> Unit) {
+    if (color.isSpecified && color.alpha > 0f) {
+        Box(Modifier.fillMaxSize().background(color)) { content() }
+    } else {
+        content()
+    }
+}
 
 /** Padding of one screen, see [ShellPadding]. */
 internal class EntryPaddingValues(val chrome: PaddingValues, val safe: PaddingValues)
