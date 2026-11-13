@@ -303,6 +303,37 @@ Ungeprüft (alles auf iOS nur kompiliert mit `:knit:compileKotlinIosSimulatorArm
 - Die Material-Icon-Pfade wurden aus dem Gedächtnis eingetragen und nur auf Parsen geprüft, nicht visuell. Aussehen von
   `Share`, `Notifications`, `Favorite` und den anderen bitte einmal ansehen.
 
+## Showcase "Pantry" (2026-11-13, Branch `feature/showcase`)
+
+Das Beispiel ist neu: statt Farbstreifen jetzt „Pantry“, eine kleine Einkaufs- und Vorratslisten-App mit Beispieldaten im
+Speicher (`PantryStore`, ein einfacher State-Holder in `App`, keine Persistenz). Vier Tabs mit `KnitIcons`, Routen als
+ein `@Serializable sealed interface Route` mit `knitRoutes<Route>()`, Argumente sind nur IDs. Material-3-Theme folgt dem
+System, die Akzentfarbe ist zugleich Material-Primary und `KnitDefaults.colors(accent = ...)`.
+
+- **Lists**: Karten mit kräftiger Farbe pro Liste, `knitSafePadding()` als `contentPadding`, `KnitTabReselectEffect`
+  scrollt nach oben. **List detail** setzt die Top-Bar selbst (`KnitTopBarOverride`, Add und Share, Share zeigt eine
+  Snackbar). **Item detail** hat bewusst keine knit-Top-Bar, sondern einen eigenen Compose-Header mit Zurück-Button in
+  `knitSafeArea()` (Testfall: auf iOS war ein Compose-Button an dieser Stelle früher tot).
+- **Inbox**: Tippen markiert gelesen, Badge am Tab (`null` bei 0), Top-Bar-Aktion „mark all read“.
+- **Search**: Textfeld filtert alle Einträge, `knitSafeArea().imePadding()`, Treffer öffnen per
+  `navigate(AppTab.Lists, ...)` die List detail im Lists-Tab.
+- **Settings**: Akzent-Swatches, `KnitModalBottomSheet`, Snackbar in `knitSafeArea()`, About mit Titel aus dem
+  `topBar`-Parameter.
+- CI-Hook bleibt: `App(openDetailOnStart)` und `-knit-detail` öffnen die List detail der ersten Liste.
+
+Geprüft unter Windows: `:example:compileKotlinDesktop`, `:example:compileKotlinIosSimulatorArm64` (nur kompiliert),
+`:knit:compileKotlinIosSimulatorArm64`, `:androidApp:lintDebug`, `:androidApp:assembleDebug`, `:knit:desktopTest`. Die
+Desktop-Demo lief (`:example:run`, dunkles System-Theme) und wurde per Screenshot durchgeklickt: alle vier Tabs, Lists →
+List detail → Item detail → zurück, Add-Aktion, Badge fällt beim „mark all read“ weg, Suche filtert und springt in den
+Lists-Tab, Akzent wechselt, Sheet blendet die Leiste aus, Snackbar liegt über der Leiste, About. Das Fenster war schmal
+(Bottom-Bar-Layout, Rail ab 600 dp ebenfalls gesehen).
+
+Ungeprüft: alles auf iOS (nichts gelinkt oder gestartet): Glass hinter den Karten, Akzent und Badge auf dem `UITabBar`,
+der Item-detail-Testfall (Compose-Zurück-Button unter der ausgeblendeten Navigationsleiste), Tastatur und
+`imePadding()` mit der Leiste auf der Suchseite, Sheet über der nativen Leiste, `-knit-detail` im CI-Screenshot. Auf einem
+Android-Gerät und im Light-Theme wurde nichts angesehen (nur Lint und Build). Die Snackbar-Platzierung und die
+Tastatur-Verschiebung auf Android sind ebenfalls nur aus dem Code abgeleitet.
+
 ## Befunde (Stand 2026-11-08, aus dem Auftrag)
 
 **knit:** unverändertes KMP-Wizard-Template (`composeApp`, `iosApp`), `main` und `develop` identisch. Versionen dort:

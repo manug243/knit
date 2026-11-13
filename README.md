@@ -107,6 +107,22 @@ iOS always shows the system bars. On the other platforms the Material bars follo
 
 Predictive back needs `android:enableOnBackInvokedCallback="true"` on the `<application>` in the manifest.
 
+## Demo
+
+`:example` is Pantry, a small shopping and pantry list app with in-memory sample data. Every screen shows one
+part of knit:
+
+| Screen | Shows |
+| --- | --- |
+| Lists | `knitSafePadding()` as `contentPadding`, so colored cards scroll behind the bars; `KnitTabReselectEffect` scrolls to the top |
+| List detail | `KnitTopBarOverride` with the list's name and two actions (`KnitIcons.Add`, `KnitIcons.Share`) |
+| Item detail | No knit top bar on purpose: an own Compose header and back button inside `Modifier.knitSafeArea()` |
+| Inbox | `badge` on the tab (unread count, `null` at zero) and a top bar action |
+| Search | The tab bar leaving for the keyboard, `imePadding()` inside `knitSafeArea()`, `navigate(tab, key)` into List detail |
+| Settings | `KnitDefaults.colors(accent = ...)`, `KnitModalBottomSheet`, a snackbar in `knitSafeArea()`, a plain `topBar` title on About |
+
+Run it with `./gradlew :example:run` on the desktop or `./gradlew :androidApp:installDebug` on Android.
+
 ## Modules
 
 - `knit`: the library
