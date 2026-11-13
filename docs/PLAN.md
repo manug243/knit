@@ -368,17 +368,21 @@ Fix in `KnitPlatformShell.ios.kt`:
 - `overrideUserInterfaceStyle` und der Neuaufbau bei Rückkehr in den Vordergrund bleiben unverändert.
 
 Geprüft unter Windows: `:knit:compileKotlinIosSimulatorArm64`, `:example:compileKotlinIosSimulatorArm64` (nur
-kompiliert, ohne Warnungen), `:knit:desktopTest`, `:knit:testAndroidHostTest`. Auf einem Gerät oder im Simulator nicht
-gesehen, nichts gelinkt oder ausgeführt.
+kompiliert, ohne Warnungen), `:knit:desktopTest`, `:knit:testAndroidHostTest` (beide aus dem Gradle-Cache, ihre Eingaben
+sind unverändert). Auf einem Gerät oder im Simulator nicht gesehen, nichts gelinkt oder ausgeführt.
 
 Auf dem iPhone zu prüfen:
 - Pille: Detailseite öffnen und per Zurück-Button und per Swipe-Back verlassen. Die Hervorhebung muss schon an ihrem Platz
-  sein und nur mit einblenden.
-- Titel: mehrmals zwischen Tabs und Detailseiten wechseln, außerdem auf einer Detailseite die App in den Hintergrund
+  sein und nur mit einblenden. Fährt sie weiterhin herein, ist die Größen-Hypothese widerlegt, denn die Größe ändert
+  sich nicht mehr. Nächster Verdacht wäre dann, dass die Glass-Leiste ihre Auswahl selbst animiert, wenn die Alpha von 0
+  auf 1 geht.
+- Titel: mehrmals zwischen Tabs und Detailseiten wechseln. Gezielt: auf einer Detailseite die App in den Hintergrund
   schicken, zurückholen und zurückgehen, auch im Dark Mode. Die Titel müssen immer da sein.
 - Schnelles Hin und Her: Detailseite öffnen und sofort (unter ¼ s) wieder schließen, mehrmals. Die Leiste darf nie
   unsichtbar oder verschwunden bleiben. Das ist die neue Fehlerquelle dieses Ansatzes.
-- Freie Fläche: der Compose-Zurück-Button oben links in Item detail (`ItemDetailScreen`) reagiert.
+- Freie Fläche: der Compose-Zurück-Button oben links in Item detail (`ItemDetailScreen`) reagiert. Die Fläche wird erst
+  nach dem Fade-out (0,25 s) frei, ein Tipp direkt nach dem Öffnen darf noch verschluckt werden. Ist der Button auch nach
+  einer Sekunde tot, hat das Parken nicht funktioniert.
 
 ## Befunde (Stand 2026-11-08, aus dem Auftrag)
 
