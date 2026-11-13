@@ -171,6 +171,20 @@ class KnitNavigatorTest {
     }
 
     @Test
+    fun navigateToTheTopScreenDoesNotStackItTwice() {
+        val navigator = navigator()
+        navigator.navigate(Screen("detail"))
+        navigator.navigate(Screen("detail"))
+        assertEquals(listOf<NavKey>(Screen("home"), Screen("detail")), navigator.currentBackStack)
+
+        // A deep link to the screen that is already open in the other tab only switches the tab.
+        navigator.select(TestTab.Search)
+        navigator.navigate(TestTab.Home, Screen("detail"))
+        assertEquals(TestTab.Home, navigator.currentTab)
+        assertEquals(listOf<NavKey>(Screen("home"), Screen("detail")), navigator.currentBackStack)
+    }
+
+    @Test
     fun navigateToUnknownTabIsRejected() {
         val navigator = KnitNavigator(
             tabs = listOf(TestTab.Home),

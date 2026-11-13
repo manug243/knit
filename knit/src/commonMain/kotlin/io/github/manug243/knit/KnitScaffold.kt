@@ -118,7 +118,9 @@ public fun <T : KnitTab> KnitScaffold(
                             }
                             EntryPadding(
                                 hasTopBar = hasTopBar,
-                                isTabRoot = navigator.tabs.any { it.root == navKey },
+                                // The start screen of this tab. The root key of another tab, opened
+                                // here as a detail screen, has no tab bar below it.
+                                isTabRoot = navKey == tab.root,
                             ) { entry.Content() }
                         }
                     }
@@ -230,11 +232,9 @@ private class BooleanHolder {
 
 @Composable
 private fun ScreenBackground(color: Color, content: @Composable () -> Unit) {
-    if (color.isSpecified && color.alpha > 0f) {
-        Box(Modifier.fillMaxSize().background(color)) { content() }
-    } else {
-        content()
-    }
+    // Always the same Box: switching between two branches would recreate the screen and lose its state.
+    val background = if (color.isSpecified && color.alpha > 0f) Modifier.background(color) else Modifier
+    Box(Modifier.fillMaxSize().then(background)) { content() }
 }
 
 /** Padding of one screen, see [ShellPadding]. */
