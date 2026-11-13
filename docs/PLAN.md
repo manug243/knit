@@ -1,6 +1,6 @@
 # knit: Plan
 
-Stand: 2026-11-12
+Stand: 2026-11-13
 
 ## Status
 
@@ -260,6 +260,48 @@ iOS-Hülle, iOS nur kompiliert. Auf dem Gerät noch nicht gesehen.
 
 Bewusst nicht gemacht: Large Titles, Minimieren der Tab-Leiste beim Scrollen und ein `UINavigationController`-Backend.
 Das lässt sich ohne Gerät nicht beurteilen.
+
+## Kleine API-Ergänzungen (2026-11-13, Branch `claude/tab-extras-f8927b`)
+
+Gebaut, alles in `:knit`:
+
+- **`KnitIcons`**: 15 fertige Icons (`Home`, `List`, `Search`, `Settings`, `Add`, `Share`, `Edit`, `Delete`, `Favorite`,
+  `Person`, `Notifications`, `Info`, `Close`, `Check`, `More`), je SF Symbol plus Material-Vektor (Apache 2.0, im
+  Dateikopf vermerkt), lazy erzeugt. Das Beispiel nutzt sie statt eigener Icons, dessen `Icons.kt` ist weg.
+- **`accent`** in `KnitDefaults.colors(...)` und `KnitColors`: wird auf iOS `tintColor` von Tab- und Navigationsleiste
+  (`Unspecified` setzt `null`, also den System-Tint). Die anderen Plattformen ignorieren ihn.
+- **`tab(..., badge: String? = null)`**: iOS setzt `UITabBarItem.badgeValue` direkt auf den vorhandenen Items, ohne sie
+  neu aufzubauen. Material-Leiste und -Rail nutzen `BadgedBox` mit `Badge`, benutzerdefinierte Leisten bekommen
+  `KnitTabBarItem.badge`. Ein leerer String ergibt einen Punkt.
+- **`KnitTabReselectEffect`**: `KnitNavigator.select` meldet einen Tipp auf den gewählten Tab, der schon an seiner
+  Startseite steht, über einen `SharedFlow` (ein Ereignis, kein Zustand, ohne Replay). Der Scaffold gibt jedem Screen den
+  Tab, zu dem er gehört (ein Entry-Provider pro Tab), der Effekt filtert darauf. Tiefere Screens: der Tipp poppt wie
+  bisher, der Effekt läuft nicht. Ein neuer Tipp bricht einen noch laufenden `onReselect` ab.
+- **`KnitModalBottomSheet`**: `ModalBottomSheet` plus `KnitTabBarHidden()`.
+- **`KnitNavigator.navigate(tab, key)`**: wechselt zum Tab, ohne ihn zu poppen, und legt `key` oben auf seinen Stack.
+- Platzhalter `object Knit` samt Test entfernt.
+
+Gefunden und behoben: Ein Zustand, der im `tabs`-Block gelesen wird (etwa ein Badge), startete nur den Block neu, nicht
+den Scaffold, und der Block lief dann auf einem alten Scope noch einmal und warf „Tab X is declared twice". Zudem hätte
+der Scaffold die Änderung nie gesehen. Der Scope lebt jetzt per `remember`, ein erneutes `tab(...)` ersetzt den Eintrag
+und meldet eine Änderung über einen Zähler. Icons werden dabei nur über ihr SF Symbol verglichen, sonst würde ein im
+Block erzeugtes `KnitIcon` bei jedem Durchlauf neu zeichnen. Nebenwirkung: ein doppelt deklarierter Tab fällt im
+Compose-Pfad nicht mehr auf (letzter gewinnt), die strenge Prüfung gilt nur noch für `buildTabItems`.
+
+Geprüft unter Windows: `:knit:desktopTest` und `:knit:testAndroidHostTest` (neu: Badge angezeigt und aktualisiert,
+Badge in der eigenen Leiste, Reselect läuft an der Startseite und nur für den getippten Tab, Reselect poppt statt zu
+feuern, Sheet blendet die Leiste aus, `navigate(tab, key)` im Navigator, Icons), `:knit:compileKotlinWasmJs`,
+`:knit:lint`, `:androidApp:lintDebug`, `:androidApp:assembleDebug`, `:example:compileKotlinDesktop`.
+
+Ungeprüft (alles auf iOS nur kompiliert mit `:knit:compileKotlinIosSimulatorArm64`, nichts gelinkt oder ausgeführt):
+- Accent auf `UITabBar` und `UINavigationBar`, auch zusammen mit `overrideUserInterfaceStyle` und der Glass-Optik.
+- Badge als `badgeValue`, besonders dass Wechsel ohne Neuaufbau der Items sauber aussehen.
+- Dass ein erneuter Tipp auf den gewählten Tab bei `UITabBar` den Delegate überhaupt auslöst. Das bisherige
+  „Tipp poppt zur Startseite" hängt an derselben Annahme.
+- `KnitModalBottomSheet` auf iOS: die Leiste verschwindet über `KnitTabBarHidden()` (Fade), wie es sich mit dem
+  Sheet-Aufgleiten anfühlt, ist offen. Ebenso Badges auf Android-Geräten und der Rail (nur Desktop-Test).
+- Die Material-Icon-Pfade wurden aus dem Gedächtnis eingetragen und nur auf Parsen geprüft, nicht visuell. Aussehen von
+  `Share`, `Notifications`, `Favorite` und den anderen bitte einmal ansehen.
 
 ## Befunde (Stand 2026-11-08, aus dem Auftrag)
 

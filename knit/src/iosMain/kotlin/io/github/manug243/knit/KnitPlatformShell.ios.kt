@@ -27,6 +27,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.colorspace.ColorSpaces
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -42,6 +45,7 @@ import platform.Foundation.NSOperationQueue
 import platform.UIKit.UIAction
 import platform.UIKit.UIApplicationDidBecomeActiveNotification
 import platform.UIKit.UIBarButtonItem
+import platform.UIKit.UIColor
 import platform.UIKit.UIImage
 import platform.UIKit.UINavigationBar
 import platform.UIKit.UINavigationBarDelegateProtocol
@@ -76,9 +80,9 @@ internal actual fun KnitPlatformShell(
     barAllowed: Boolean,
     onSelect: (Int) -> Unit,
     topBar: ShellTopBar?,
-    // Colors and custom bars only apply to the Compose bars of the other platforms. The native bars
-    // keep their system look.
-    @Suppress("UNUSED_PARAMETER") style: ShellStyle,
+    // Only the accent applies. The other colors and the custom bars are for the Compose bars of the
+    // other platforms, the native bars keep their system look.
+    style: ShellStyle,
     modifier: Modifier,
     content: @Composable () -> Unit,
 ) {
@@ -111,6 +115,9 @@ internal actual fun KnitPlatformShell(
     // rebuilt when the app returns to the foreground. Without that the glass bar could come back from
     // the background in the light style while the app is dark, until a tab was switched.
     val dark = isSystemInDarkTheme()
+    val tint = style.colors.accent.toUIColorOrNull()
+    val tinter = remember { BarTinter() }
+    val navTinter = remember { BarTinter() }
     val foregroundCount = rememberForegroundCount()
 
     val system = systemSafePadding()
@@ -172,6 +179,7 @@ internal actual fun KnitPlatformShell(
             // update again. Reading only shownTopBar, a plain field, left the bar empty when the screen
             // was opened after the first frame.
             update = { bar ->
+                navTinter.apply(bar, tint)
                 (topBar ?: shownTopBar.value)?.let { navSynchronizer.sync(bar, it) }
                 bar.fadeTo(topBar != null)
             },
@@ -199,6 +207,7 @@ internal actual fun KnitPlatformShell(
                 } else {
                     UIUserInterfaceStyle.UIUserInterfaceStyleLight
                 }
+                tinter.apply(bar, tint)
                 synchronizer.sync(bar, items, selectedIndex, generation = foregroundCount)
                 val height = bar.sizeThatFits(CGSizeMake(0.0, 0.0)).useContents { height }.dp
                 if (height != measuredHeight) measuredHeight = height
@@ -211,6 +220,38 @@ internal actual fun KnitPlatformShell(
             ),
         )
     }
+}
+
+/**
+ * Sets the accent on a bar. Without an accent the bar keeps what it inherits from the window, which
+ * is the app's own tint if it has one. If an accent was set before and is withdrawn, the inherited
+ * tint is put back by hand, because UIKit's `tintColor` of a Kotlin view cannot be set to nil.
+ */
+@OptIn(ExperimentalForeignApi::class)
+private class BarTinter {
+    private var applied = false
+
+    fun apply(bar: UIView, tint: UIColor?) {
+        if (tint != null) {
+            bar.tintColor = tint
+            applied = true
+        } else if (applied) {
+            bar.tintColor = bar.superview?.tintColor ?: UIColor.blueColor
+            applied = false
+        }
+    }
+}
+
+/** The accent as a UIColor, or null if none is set. */
+private fun Color.toUIColorOrNull(): UIColor? {
+    if (!isSpecified) return null
+    val srgb = convert(ColorSpaces.Srgb)
+    return UIColor.colorWithRed(
+        red = srgb.red.toDouble(),
+        green = srgb.green.toDouble(),
+        blue = srgb.blue.toDouble(),
+        alpha = srgb.alpha.toDouble(),
+    )
 }
 
 private const val BarFadeSeconds = 0.25
@@ -281,6 +322,12 @@ private class TabBarSynchronizer {
                 animated = false,
             )
             signature = newSignature
+        }
+        // Badges are not part of the signature: a changed badge must not rebuild the items. The value
+        // is set on the existing native items instead.
+        items.forEachIndexed { index, item ->
+            val native = bar.items?.getOrNull(index) as? UITabBarItem
+            if (native != null && native.badgeValue != item.badge) native.badgeValue = item.badge
         }
         val target = bar.items?.getOrNull(selectedIndex) as? UITabBarItem
         if (target != null && bar.selectedItem != target) {
