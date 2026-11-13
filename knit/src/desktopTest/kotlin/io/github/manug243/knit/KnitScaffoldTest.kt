@@ -16,9 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -414,6 +416,67 @@ class KnitScaffoldTest {
         // The start screen keeps its padding while the detail screen and its top bar come in.
         assertEquals(setOf(PaddingValues(top = 0.dp, bottom = 83.dp)), seen.getValue("a").toSet())
         assertEquals(setOf(PaddingValues(top = 44.dp, bottom = 0.dp)), seen.getValue("detail").toSet())
+    }
+
+    @Test
+    fun poppedScreenKeepsItsTopBarPaddingWhileItLeaves() = runComposeUiTest {
+        val floating = ShellPadding { hasTopBar, isTabRoot ->
+            val padding = PaddingValues(top = if (hasTopBar) 44.dp else 0.dp, bottom = if (isTabRoot) 83.dp else 0.dp)
+            EntryPaddingValues(chrome = padding, safe = padding)
+        }
+        val seen = mutableListOf<PaddingValues>()
+        lateinit var navigator: KnitNavigator<ScaffoldTab>
+        setContent {
+            navigator = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            CompositionLocalProvider(LocalShellPadding provides floating) {
+                KnitScaffold(
+                    navigator = navigator,
+                    tabs = {
+                        tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                        tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                    },
+                    entryProvider = entryProvider {
+                        entry<Page> { page ->
+                            if (page.name == "detail") {
+                                KnitTopBarOverride(KnitTopBar("Detail"))
+                                seen += knitSafePadding()
+                            }
+                            Text("page ${page.name}")
+                        }
+                    },
+                )
+            }
+        }
+        runOnIdle { navigator.navigate(Page("detail")) }
+        onNodeWithText("page detail").assertExists()
+        // The override is set by an effect, so the first frame of the push is not of interest here.
+        seen.clear()
+        mainClock.autoAdvance = false
+        runOnIdle { navigator.back() }
+        repeat(3) { mainClock.advanceTimeByFrame() }
+        mainClock.autoAdvance = true
+        waitForIdle()
+        // It may not recompose at all, but if it does the padding must not have lost the bar.
+        assertEquals(emptySet(), seen.toSet() - PaddingValues(top = 44.dp, bottom = 0.dp))
+    }
+
+    @Test
+    fun everyScreenHasAnOpaqueBackground() = runComposeUiTest {
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider { entry<Page> { Text("page ${it.name}") } },
+                colors = KnitDefaults.colors(screenBackground = androidx.compose.ui.graphics.Color.Magenta),
+            )
+        }
+        val image = onNodeWithText("page a").captureToImage()
+        // The pixel in the corner is far from the text, so only the background can have painted it.
+        assertEquals(androidx.compose.ui.graphics.Color.Magenta, image.toPixelMap()[image.width - 2, 2])
     }
 
     @Test
