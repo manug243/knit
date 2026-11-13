@@ -250,6 +250,14 @@ Leiste bekommt `overrideUserInterfaceStyle` aus `isSystemInDarkTheme()` statt de
 `UIApplicationDidBecomeActiveNotification` sowie 400 ms danach werden ihre Items neu gesetzt. Unter Windows nur
 kompiliert (`:knit:compileKotlinIosSimulatorArm64` läuft dort dank klib-Cross-Compilation, linken und ausführen nicht).
 
+Zweiter Fehler auf dem iPhone (Manuel, 2026-11-13): Beim Öffnen einer Detailseite sprang der Tab-Start ein Stück nach
+unten. Ursache: `knitSafePadding()` war ein gemeinsamer Wert für alle Screens und wuchs mit der Navigationsleiste der
+neuen Seite, während die alte noch zu sehen war. Jetzt bekommt auf iOS jeder Screen seinen eigenen Wert, abhängig von
+den Leisten, die er selbst hat (Top-Bar ja oder nein, Tab-Start ja oder nein). Navigation ändert ihn nicht mehr, nur
+Tastatur und `KnitTabBarHidden()`. Das gilt auch für `LocalKnitContentPadding`. Auf Android, Desktop und Web bleibt es
+beim gemeinsamen Wert, dort verschieben die Leisten den Inhalt ohnehin. Geprüft: Desktop-Test mit einer nachgestellten
+iOS-Hülle, iOS nur kompiliert. Auf dem Gerät noch nicht gesehen.
+
 Bewusst nicht gemacht: Large Titles, Minimieren der Tab-Leiste beim Scrollen und ein `UINavigationController`-Backend.
 Das lässt sich ohne Gerät nicht beurteilen.
 

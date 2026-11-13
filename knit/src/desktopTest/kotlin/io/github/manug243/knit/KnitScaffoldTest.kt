@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -377,6 +378,42 @@ class KnitScaffoldTest {
     fun safePaddingWorksOutsideAScaffold() = runComposeUiTest {
         setContent { Text("alone", modifier = Modifier.knitSafeArea()) }
         onNodeWithText("alone").assertExists()
+    }
+
+    @Test
+    fun floatingBarsPadEveryScreenByItsOwnBars() = runComposeUiTest {
+        // Stands in for the iOS shell, the only one with floating bars.
+        val floating = ShellPadding { hasTopBar, isTabRoot ->
+            val padding = PaddingValues(top = if (hasTopBar) 44.dp else 0.dp, bottom = if (isTabRoot) 83.dp else 0.dp)
+            EntryPaddingValues(chrome = padding, safe = padding)
+        }
+        val seen = mutableMapOf<String, MutableSet<PaddingValues>>()
+        lateinit var navigator: KnitNavigator<ScaffoldTab>
+        setContent {
+            navigator = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            CompositionLocalProvider(LocalShellPadding provides floating) {
+                KnitScaffold(
+                    navigator = navigator,
+                    tabs = {
+                        tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                        tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                    },
+                    entryProvider = entryProvider {
+                        entry<Page> { page ->
+                            seen.getOrPut(page.name) { mutableSetOf() } += knitSafePadding()
+                            Text("page ${page.name}")
+                        }
+                    },
+                    topBar = { key -> if ((key as Page).name == "detail") KnitTopBar("Detail") else null },
+                )
+            }
+        }
+        runOnIdle { navigator.navigate(Page("detail")) }
+        onNodeWithText("page detail").assertExists()
+
+        // The start screen keeps its padding while the detail screen and its top bar come in.
+        assertEquals(setOf(PaddingValues(top = 0.dp, bottom = 83.dp)), seen.getValue("a").toSet())
+        assertEquals(setOf(PaddingValues(top = 44.dp, bottom = 0.dp)), seen.getValue("detail").toSet())
     }
 
     @Test
