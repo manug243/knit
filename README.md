@@ -5,8 +5,7 @@ Native iOS and Android navigation chrome for Compose Multiplatform, built on Nav
 One Compose tree, one navigation state, no Swift. iOS gets a real `UITabBar` and `UINavigationBar` (Liquid Glass
 when built with the iOS 26 SDK), Android gets Material 3 bars with a rail from 600 dp and predictive back.
 
-Work in progress, not published yet. See [docs/PLAN.md](docs/PLAN.md) for the roadmap and for what has been
-checked on real devices.
+Work in progress, not published yet.
 
 ## Quick start
 
