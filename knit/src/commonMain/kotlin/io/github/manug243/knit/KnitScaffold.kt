@@ -2,12 +2,16 @@ package io.github.manug243.knit
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.getValue
@@ -15,6 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -34,8 +40,9 @@ private const val TabFadeMillis = 180
  * as `contentPadding` of a `LazyColumn`.
  *
  * On iOS the native bars float above the content, so the bottom is the height of the tab bar and
- * the top the height of the navigation bar below the status bar, each while the bar is visible and
- * zero otherwise. On Android and Desktop the bars sit next to the content and this is zero.
+ * the top the height of the navigation bar below the status bar, each for a screen that has the bar
+ * and zero otherwise. The value belongs to the screen that reads it and does not change while
+ * another screen is pushed on top. On Android and Desktop the bars sit next to the content and this is zero.
  * The status bar inset itself is not part of the top value, add the system insets as usual.
  *
  * Most screens want [knitSafePadding] instead, which already contains the system insets.
@@ -59,8 +66,8 @@ public val LocalKnitContentPadding: androidx.compose.runtime.ProvidableCompositi
  * Below a tab's start screen the bar also shows a back button that pops the screen. It is called
  * with the top of the current tab's stack, so it follows navigation and can read the key's arguments.
  * @param colors colors of the Material bars on Android, Desktop and Web. The default follows the
- * surrounding `MaterialTheme`, see [KnitDefaults.colors]. iOS ignores it, its native bars take
- * their look from the system.
+ * surrounding `MaterialTheme`, see [KnitDefaults.colors]. iOS keeps the system look of its native
+ * bars and only takes the accent color from it.
  * @param tabBar draws the tab bar yourself on Android, Desktop and Web, for example to match an own
  * design system. It gets the tabs and whether to draw a bottom bar or a side rail, and has to handle
  * the navigation bar inset itself. iOS ignores it and keeps the native bar.
@@ -88,11 +95,36 @@ public fun <T : KnitTab> KnitScaffold(
     val overrides = remember { mutableStateMapOf<NavKey, KnitTopBar>() }
     // Tells every screen which key it shows, which KnitTopBarOverride needs.
     val currentEntryProvider by rememberUpdatedState(entryProvider)
-    val keyedEntryProvider: (NavKey) -> NavEntry<NavKey> = remember {
-        { navKey ->
-            val entry = currentEntryProvider(navKey)
-            NavEntry(navKey, contentKey = entry.contentKey, metadata = entry.metadata) {
-                CompositionLocalProvider(LocalKnitEntryKey provides navKey) { entry.Content() }
+    val currentTopBar by rememberUpdatedState(topBar)
+    val currentBackground by rememberUpdatedState(colors.screenBackground)
+    // One provider per tab, so every screen knows which tab it belongs to, which
+    // KnitTabReselectEffect needs.
+    val keyedEntryProviderFor: (T) -> (NavKey) -> NavEntry<NavKey> = remember(navigator) {
+        { tab ->
+            { navKey ->
+                val entry = currentEntryProvider(navKey)
+                NavEntry(navKey, contentKey = entry.contentKey, metadata = entry.metadata) {
+                    CompositionLocalProvider(LocalKnitEntryKey provides navKey, LocalKnitEntryTab provides tab) {
+                        // Opaque and outside the padding, so it also covers the area under the bars.
+                        ScreenBackground(currentBackground) {
+                            // A popped screen has left every back stack and its override is gone while it
+                            // still animates out. It keeps the padding it had.
+                            val lastHasTopBar = remember { BooleanHolder() }
+                            val inStack = navigator.tabs.any { navKey in navigator.backStack(it) }
+                            val hasTopBar = if (inStack) {
+                                ((overrides[navKey] ?: currentTopBar(navKey)) != null).also { lastHasTopBar.value = it }
+                            } else {
+                                lastHasTopBar.value
+                            }
+                            EntryPadding(
+                                hasTopBar = hasTopBar,
+                                // The start screen of this tab. The root key of another tab, opened
+                                // here as a detail screen, has no tab bar below it.
+                                isTabRoot = navKey == tab.root,
+                            ) { entry.Content() }
+                        }
+                    }
+                }
             }
         }
     }
@@ -112,7 +144,7 @@ public fun <T : KnitTab> KnitScaffold(
                     rememberSaveableStateHolderNavEntryDecorator(),
                     rememberViewModelStoreNavEntryDecorator(),
                 ),
-                entryProvider = keyedEntryProvider,
+                entryProvider = keyedEntryProviderFor(tab),
             )
         }
     }
@@ -127,7 +159,8 @@ public fun <T : KnitTab> KnitScaffold(
 
     val hideRequests = remember { TabBarHideRequests() }
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-    val barItems = items.map { ShellItem(it.title, it.icon) }
+    val barAllowed = !imeVisible && hideRequests.count == 0
+    val barItems = items.map { ShellItem(it.title, it.icon, it.badge) }
     val selectedIndex = items.indexOfFirst { it.tab == navigator.currentTab }
 
     val stack = navigator.currentBackStack
@@ -145,7 +178,8 @@ public fun <T : KnitTab> KnitScaffold(
     KnitPlatformShell(
         items = barItems,
         selectedIndex = selectedIndex,
-        barVisible = navigator.isAtTabRoot && !imeVisible && hideRequests.count == 0,
+        barVisible = navigator.isAtTabRoot && barAllowed,
+        barAllowed = barAllowed,
         onSelect = { index -> navigator.select(items[index].tab) },
         topBar = shellTopBar,
         style = ShellStyle(colors, tabBar, topBarContent),
@@ -154,6 +188,7 @@ public fun <T : KnitTab> KnitScaffold(
         CompositionLocalProvider(
             LocalKnitTopBarOverrides provides overrides,
             LocalKnitTabBarHideRequests provides hideRequests,
+            LocalKnitReselects provides navigator.reselects,
         ) {
             // Switching tabs fades between the two screens, like the system tab bars do. It is not a
             // push or pop, so the content of a tab never slides.
@@ -170,23 +205,62 @@ public fun <T : KnitTab> KnitScaffold(
 internal class ShellItem(
     val title: String,
     val icon: KnitIcon,
+    val badge: String?,
 )
 
 /**
  * Draws the platform's chrome around [content] and provides [LocalKnitContentPadding].
- * [selectedIndex] and [onSelect] refer to positions in [items].
+ * [selectedIndex] and [onSelect] refer to positions in [items]. [barAllowed] is false while something
+ * other than navigation hides the tab bar: the keyboard or a [KnitTabBarHidden].
  */
 @Composable
 internal expect fun KnitPlatformShell(
     items: List<ShellItem>,
     selectedIndex: Int,
     barVisible: Boolean,
+    barAllowed: Boolean,
     onSelect: (Int) -> Unit,
     topBar: ShellTopBar?,
     style: ShellStyle,
     modifier: Modifier,
     content: @Composable () -> Unit,
 )
+
+private class BooleanHolder {
+    var value: Boolean = false
+}
+
+@Composable
+private fun ScreenBackground(color: Color, content: @Composable () -> Unit) {
+    // Always the same Box: switching between two branches would recreate the screen and lose its state.
+    val background = if (color.isSpecified && color.alpha > 0f) Modifier.background(color) else Modifier
+    Box(Modifier.fillMaxSize().then(background)) { content() }
+}
+
+/** Padding of one screen, see [ShellPadding]. */
+internal class EntryPaddingValues(val chrome: PaddingValues, val safe: PaddingValues)
+
+/**
+ * Padding for a single screen where the bars float above the content. It depends on the bars that
+ * screen itself has, not on the ones currently shown. During a push both screens are on screen, and
+ * a shared value would move the content of the one below while the bars of the new one come in.
+ */
+internal fun interface ShellPadding {
+    fun forEntry(hasTopBar: Boolean, isTabRoot: Boolean): EntryPaddingValues
+}
+
+/** Set by a shell with floating bars, null where the bars sit next to the content. */
+internal val LocalShellPadding = compositionLocalOf<ShellPadding?> { null }
+
+@Composable
+private fun EntryPadding(hasTopBar: Boolean, isTabRoot: Boolean, content: @Composable () -> Unit) {
+    val padding = LocalShellPadding.current?.forEntry(hasTopBar, isTabRoot)
+    if (padding == null) {
+        content()
+    } else {
+        ProvideKnitContentPadding(chrome = padding.chrome, safe = padding.safe, content = content)
+    }
+}
 
 /**
  * Provides what the chrome covers ([chrome], see [LocalKnitContentPadding]) and the whole area a

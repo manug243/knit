@@ -7,9 +7,10 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
 /**
- * Colors of the Material tab bar, rail and top bar on Android, Desktop and Web. iOS always draws
- * the native bars, which take their look from the system, so these colors do not apply there.
- * Create it with [KnitDefaults.colors].
+ * Colors of the bars. On Android, Desktop and Web the Material tab bar, rail and top bar use all of
+ * them except [accent]. iOS always draws the native bars, which take their look from the system, so
+ * only [accent] applies there. [screenBackground] applies on every platform. Create it with
+ * [KnitDefaults.colors].
  */
 @Immutable
 public class KnitColors internal constructor(
@@ -19,6 +20,14 @@ public class KnitColors internal constructor(
     public val tabBarIndicator: Color,
     public val topBarContainer: Color,
     public val topBarContent: Color,
+    /** Tint of the native tab bar and navigation bar on iOS. [Color.Unspecified] keeps the system tint. */
+    public val accent: Color,
+    /**
+     * Opaque background behind every screen, covering the whole area including the space under the
+     * bars. A screen has no background of its own, so without it both screens of a push or pop would
+     * show through each other while they animate. [Color.Transparent] or [Color.Unspecified] draws none.
+     */
+    public val screenBackground: Color,
 )
 
 /** Defaults of [KnitScaffold]. */
@@ -26,6 +35,13 @@ public object KnitDefaults {
     /**
      * Colors taken from the surrounding `MaterialTheme`. Pass any of them to override just that one,
      * for example when the app has its own design system and maps its colors here.
+     *
+     * @param accent tint of the native bars on iOS: the selected tab, the back button and the actions.
+     * The default keeps the system tint. The other platforms ignore it, they have the detailed
+     * colors above.
+     * @param screenBackground background behind every screen on all platforms, so a push or pop does not
+     * show the screens through each other. The default is the theme's background. [Color.Transparent]
+     * or [Color.Unspecified] switches it off, for example if the app paints its screens itself.
      */
     @Composable
     public fun colors(
@@ -35,6 +51,8 @@ public object KnitDefaults {
         tabBarIndicator: Color = MaterialTheme.colorScheme.secondaryContainer,
         topBarContainer: Color = MaterialTheme.colorScheme.surface,
         topBarContent: Color = MaterialTheme.colorScheme.onSurface,
+        accent: Color = Color.Unspecified,
+        screenBackground: Color = MaterialTheme.colorScheme.background,
     ): KnitColors = KnitColors(
         tabBarContainer = tabBarContainer,
         tabBarContent = tabBarContent,
@@ -42,6 +60,8 @@ public object KnitDefaults {
         tabBarIndicator = tabBarIndicator,
         topBarContainer = topBarContainer,
         topBarContent = topBarContent,
+        accent = accent,
+        screenBackground = screenBackground,
     )
 }
 
@@ -49,6 +69,8 @@ public object KnitDefaults {
 public class KnitTabBarItem internal constructor(
     public val title: String,
     public val icon: KnitIcon,
+    /** Text on the tab's icon, or null for none. */
+    public val badge: String?,
     public val selected: Boolean,
     public val onClick: () -> Unit,
 )

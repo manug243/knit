@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -15,9 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -380,6 +383,103 @@ class KnitScaffoldTest {
     }
 
     @Test
+    fun floatingBarsPadEveryScreenByItsOwnBars() = runComposeUiTest {
+        // Stands in for the iOS shell, the only one with floating bars.
+        val floating = ShellPadding { hasTopBar, isTabRoot ->
+            val padding = PaddingValues(top = if (hasTopBar) 44.dp else 0.dp, bottom = if (isTabRoot) 83.dp else 0.dp)
+            EntryPaddingValues(chrome = padding, safe = padding)
+        }
+        val seen = mutableMapOf<String, MutableSet<PaddingValues>>()
+        lateinit var navigator: KnitNavigator<ScaffoldTab>
+        setContent {
+            navigator = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            CompositionLocalProvider(LocalShellPadding provides floating) {
+                KnitScaffold(
+                    navigator = navigator,
+                    tabs = {
+                        tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                        tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                    },
+                    entryProvider = entryProvider {
+                        entry<Page> { page ->
+                            seen.getOrPut(page.name) { mutableSetOf() } += knitSafePadding()
+                            Text("page ${page.name}")
+                        }
+                    },
+                    topBar = { key -> if ((key as Page).name == "detail") KnitTopBar("Detail") else null },
+                )
+            }
+        }
+        runOnIdle { navigator.navigate(Page("detail")) }
+        onNodeWithText("page detail").assertExists()
+
+        // The start screen keeps its padding while the detail screen and its top bar come in.
+        assertEquals(setOf(PaddingValues(top = 0.dp, bottom = 83.dp)), seen.getValue("a").toSet())
+        assertEquals(setOf(PaddingValues(top = 44.dp, bottom = 0.dp)), seen.getValue("detail").toSet())
+    }
+
+    @Test
+    fun poppedScreenKeepsItsTopBarPaddingWhileItLeaves() = runComposeUiTest {
+        val floating = ShellPadding { hasTopBar, isTabRoot ->
+            val padding = PaddingValues(top = if (hasTopBar) 44.dp else 0.dp, bottom = if (isTabRoot) 83.dp else 0.dp)
+            EntryPaddingValues(chrome = padding, safe = padding)
+        }
+        val seen = mutableListOf<PaddingValues>()
+        lateinit var navigator: KnitNavigator<ScaffoldTab>
+        setContent {
+            navigator = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            CompositionLocalProvider(LocalShellPadding provides floating) {
+                KnitScaffold(
+                    navigator = navigator,
+                    tabs = {
+                        tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                        tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                    },
+                    entryProvider = entryProvider {
+                        entry<Page> { page ->
+                            if (page.name == "detail") {
+                                KnitTopBarOverride(KnitTopBar("Detail"))
+                                seen += knitSafePadding()
+                            }
+                            Text("page ${page.name}")
+                        }
+                    },
+                )
+            }
+        }
+        runOnIdle { navigator.navigate(Page("detail")) }
+        onNodeWithText("page detail").assertExists()
+        // The override is set by an effect, so the first frame of the push is not of interest here.
+        seen.clear()
+        mainClock.autoAdvance = false
+        runOnIdle { navigator.back() }
+        repeat(3) { mainClock.advanceTimeByFrame() }
+        mainClock.autoAdvance = true
+        waitForIdle()
+        // It may not recompose at all, but if it does the padding must not have lost the bar.
+        assertEquals(emptySet(), seen.toSet() - PaddingValues(top = 44.dp, bottom = 0.dp))
+    }
+
+    @Test
+    fun everyScreenHasAnOpaqueBackground() = runComposeUiTest {
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider { entry<Page> { Text("page ${it.name}") } },
+                colors = KnitDefaults.colors(screenBackground = androidx.compose.ui.graphics.Color.Magenta),
+            )
+        }
+        val image = onNodeWithText("page a").captureToImage()
+        // The pixel in the corner is far from the text, so only the background can have painted it.
+        assertEquals(androidx.compose.ui.graphics.Color.Magenta, image.toPixelMap()[image.width - 2, 2])
+    }
+
+    @Test
     fun noTopBarWithoutConfig() = runComposeUiTest {
         show {}
         onNodeWithText("open a").performClick()
@@ -400,5 +500,219 @@ class KnitScaffoldTest {
         runOnIdle { navigator.select(ScaffoldTab.A) }
         waitForIdle()
         onNodeWithText("page a-detail").assertExists()
+    }
+
+    @Test
+    fun badgeIsShownAndUpdated() = runComposeUiTest {
+        var badge by mutableStateOf<String?>("3")
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon, badge = badge)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider { entry<Page> { Text("page ${it.name}") } },
+            )
+        }
+        onNodeWithText("3", useUnmergedTree = true).assertExists()
+        badge = "12"
+        waitForIdle()
+        onNodeWithText("3", useUnmergedTree = true).assertDoesNotExist()
+        onNodeWithText("12", useUnmergedTree = true).assertExists()
+        badge = null
+        waitForIdle()
+        onNodeWithText("12", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun customTabBarGetsBadge() = runComposeUiTest {
+        var seen: List<String?> = emptyList()
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon, badge = "7")
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider { entry<Page> { Text("page ${it.name}") } },
+                tabBar = { state -> seen = state.items.map { it.badge } },
+            )
+        }
+        runOnIdle { assertEquals(listOf<String?>("7", null), seen) }
+    }
+
+    private fun androidx.compose.ui.test.ComposeUiTest.showReselect(
+        fired: MutableList<String>,
+        onNavigator: (KnitNavigator<ScaffoldTab>) -> Unit,
+    ) {
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            onNavigator(nav)
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider {
+                    entry<Page> { page ->
+                        KnitTabReselectEffect { fired += page.name }
+                        Column {
+                            Text("page ${page.name}")
+                            Button(onClick = { nav.navigate(Page("${page.name}-detail")) }) {
+                                Text("open ${page.name}")
+                            }
+                        }
+                    }
+                },
+            )
+        }
+    }
+
+    @Test
+    fun reselectingTheTabAtItsStartScreenRunsTheEffect() = runComposeUiTest {
+        val fired = mutableListOf<String>()
+        showReselect(fired) {}
+        onNodeWithText("Tab A").performClick()
+        waitForIdle()
+        assertEquals(listOf("a"), fired)
+        onNodeWithText("Tab A").performClick()
+        waitForIdle()
+        assertEquals(listOf("a", "a"), fired)
+    }
+
+    @Test
+    fun switchingTabsDoesNotRunTheEffectAndOnlyTheTappedTabReacts() = runComposeUiTest {
+        val fired = mutableListOf<String>()
+        showReselect(fired) {}
+        onNodeWithText("Tab B").performClick()
+        waitForIdle()
+        assertEquals(emptyList(), fired)
+        onNodeWithText("Tab B").performClick()
+        waitForIdle()
+        assertEquals(listOf("b"), fired)
+    }
+
+    @Test
+    fun reselectingPopsADetailScreenInsteadOfRunningTheEffect() = runComposeUiTest {
+        val fired = mutableListOf<String>()
+        lateinit var navigator: KnitNavigator<ScaffoldTab>
+        showReselect(fired) { navigator = it }
+        onNodeWithText("open a").performClick()
+        waitForIdle()
+        onNodeWithText("page a-detail").assertExists()
+
+        // The bar is hidden below a start screen, so the tap on the tab comes from the navigator.
+        runOnIdle { navigator.select(ScaffoldTab.A) }
+        waitForIdle()
+        onNodeWithText("page a").assertExists()
+        assertEquals(emptyList(), fired)
+    }
+
+    // A new provider instance on every call, like an app that builds it inline in its content.
+    private fun entryProviderCounting(
+        onCall: () -> Unit,
+        content: @androidx.compose.runtime.Composable (Page) -> Unit,
+    ): (NavKey) -> androidx.navigation3.runtime.NavEntry<NavKey> {
+        val inner = entryProvider<NavKey> { entry<Page> { content(it) } }
+        return { key -> onCall(); inner(key) }
+    }
+
+    @Test
+    fun screenSurvivesRecompositionsOfTheScaffold() = runComposeUiTest {
+        var badge by mutableStateOf<String?>(null)
+        var title by mutableStateOf("first")
+        var created = 0
+        var providerCalls = 0
+        lateinit var navigator: KnitNavigator<ScaffoldTab>
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            navigator = nav
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon, badge = badge)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProviderCounting(onCall = { providerCalls++ }) { page ->
+                    // Not saveable on purpose: it is lost when the screen is recreated.
+                    var count by remember { mutableIntStateOf(0) }
+                    remember { created++ }
+                    Column {
+                        Text("page ${page.name}")
+                        Text("count ${page.name}=$count")
+                        Button(onClick = { count++ }) { Text("inc ${page.name}") }
+                        Button(onClick = { nav.navigate(Page("${page.name}-detail")) }) {
+                            Text("open ${page.name}")
+                        }
+                    }
+                },
+                topBar = { KnitTopBar(title = "$title ${(it as Page).name}") },
+            )
+        }
+        onNodeWithText("open a").performClick()
+        waitForIdle()
+        onNodeWithText("inc a-detail").performClick()
+        onNodeWithText("count a-detail=1").assertExists()
+        val createdBefore = created
+        val callsBefore = providerCalls
+
+        badge = "1"
+        waitForIdle()
+        title = "second"
+        waitForIdle()
+        badge = "2"
+        waitForIdle()
+
+        onNodeWithText("count a-detail=1").assertExists()
+        assertEquals(createdBefore, created, "a screen was recreated by an unrelated recomposition")
+        assertEquals(callsBefore, providerCalls, "the entry provider ran again for an unchanged back stack")
+    }
+
+    @Test
+    fun bothScreensAreComposedWhenAPushStarts() = runComposeUiTest {
+        show {}
+        mainClock.autoAdvance = false
+        onNodeWithText("open a").performClick()
+        mainClock.advanceTimeByFrame()
+        mainClock.advanceTimeByFrame()
+        // The screen below has to stay composed while the new one comes in, or the push has nothing to animate.
+        onNodeWithText("page a-detail").assertExists()
+        onNodeWithText("page a").assertExists()
+        mainClock.autoAdvance = true
+        waitForIdle()
+        onNodeWithText("page a-detail").assertExists()
+        onNodeWithText("page a").assertDoesNotExist()
+    }
+
+    @Test
+    fun modalBottomSheetHidesTheTabBar() = runComposeUiTest {
+        setContent {
+            val nav = rememberKnitNavigator(ScaffoldTab.entries, ScaffoldConfig)
+            KnitScaffold(
+                navigator = nav,
+                tabs = {
+                    tab(ScaffoldTab.A, "Tab A", scaffoldIcon)
+                    tab(ScaffoldTab.B, "Tab B", scaffoldIcon)
+                },
+                entryProvider = entryProvider {
+                    entry<Page> {
+                        var sheet by remember { mutableStateOf(false) }
+                        if (sheet) {
+                            KnitModalBottomSheet(onDismissRequest = { sheet = false }) { Text("sheet content") }
+                        }
+                        Button(onClick = { sheet = true }) { Text("show sheet") }
+                    }
+                },
+            )
+        }
+        onNodeWithText("Tab A").assertExists()
+        onNodeWithText("show sheet").performClick()
+        waitForIdle()
+        onNodeWithText("sheet content").assertExists()
+        onNodeWithText("Tab A").assertDoesNotExist()
     }
 }
