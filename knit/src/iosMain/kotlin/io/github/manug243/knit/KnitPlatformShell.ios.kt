@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -72,6 +73,7 @@ internal actual fun KnitPlatformShell(
     items: List<ShellItem>,
     selectedIndex: Int,
     barVisible: Boolean,
+    barAllowed: Boolean,
     onSelect: (Int) -> Unit,
     topBar: ShellTopBar?,
     // Colors and custom bars only apply to the Compose bars of the other platforms. The native bars
@@ -118,20 +120,40 @@ internal actual fun KnitPlatformShell(
     val navBarOnScreen = topBar != null || coveredTop > 0.dp
     val tabBarOnScreen = barVisible || coveredHeight > 0.dp
 
+    // What a start screen of a tab keeps clear at the bottom. Navigation does not change it, so the
+    // screen below does not move while a detail screen slides in.
+    val rootBarHeight by animateDpAsState(if (barAllowed) barHeight else 0.dp)
+    val shellPadding = ShellPadding { hasTopBar, isTabRoot ->
+        val top = if (hasTopBar) ClassicNavigationBarHeight else 0.dp
+        val bottom = if (isTabRoot) rootBarHeight else 0.dp
+        EntryPaddingValues(
+            chrome = PaddingValues(top = top, bottom = bottom),
+            // The height of the tab bar already contains the home indicator region, so the larger one counts.
+            safe = PaddingValues(
+                start = system.calculateStartPadding(layoutDirection),
+                top = system.calculateTopPadding() + top,
+                end = system.calculateEndPadding(layoutDirection),
+                bottom = maxOf(system.calculateBottomPadding(), bottom),
+            ),
+        )
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // The tab bar's height already contains the home indicator region, so the larger one counts.
+            // Fallback for content outside a screen. Screens get their own values from shellPadding.
             val safe = PaddingValues(
                 start = system.calculateStartPadding(layoutDirection),
                 top = system.calculateTopPadding() + coveredTop,
                 end = system.calculateEndPadding(layoutDirection),
                 bottom = maxOf(system.calculateBottomPadding(), coveredHeight),
             )
-            ProvideKnitContentPadding(
-                chrome = PaddingValues(top = coveredTop, bottom = coveredHeight),
-                safe = safe,
-                content = content,
-            )
+            CompositionLocalProvider(LocalShellPadding provides shellPadding) {
+                ProvideKnitContentPadding(
+                    chrome = PaddingValues(top = coveredTop, bottom = coveredHeight),
+                    safe = safe,
+                    content = content,
+                )
+            }
         }
         UIKitView(
             factory = {
