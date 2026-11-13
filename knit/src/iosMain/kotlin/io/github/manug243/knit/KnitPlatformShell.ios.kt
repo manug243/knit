@@ -243,9 +243,30 @@ internal actual fun KnitPlatformShell(
                     generation = foregroundCount,
                     withoutAnimation = wasHidden || !barVisible,
                 )
-                val height = bar.sizeThatFits(CGSizeMake(0.0, 0.0)).useContents { height }.dp
-                if (height != measuredHeight) measuredHeight = height
-                if (barVisible && wasHidden) bar.settleLayout()
+                // Measured at the bar's real width, and only once it has one. The measurement used to
+                // ask for the size at width 0. A screenshot from the iPhone showed a bar at full size
+                // whose unselected items had no titles and whose selected title was cut to "Se…", a
+                // layout for almost no width. Whether sizeThatFits leaves such a layout behind in the
+                // items is a hypothesis, but there is no reason to ask for a width the bar never has.
+                // The item layout is redone by hand instead of relying on UIKit to notice: after new
+                // items, before a fade-in, and as soon as a bar that got items without a size has one.
+                if (barVisible && wasHidden) synchronizer.layoutPending = true
+                fun measureAndSettle(): Boolean {
+                    val width = bar.bounds.useContents { size.width }
+                    if (width <= 0.0) return false
+                    val height = bar.sizeThatFits(CGSizeMake(width, 0.0)).useContents { height }.dp
+                    if (height != measuredHeight) measuredHeight = height
+                    if (synchronizer.layoutPending) {
+                        bar.settleLayout()
+                        synchronizer.layoutPending = false
+                    }
+                    return true
+                }
+                // Before the first frame the bar has no size yet: CMP applies the frame after this
+                // block in the same transaction. Then it is done once more right after that.
+                if (!measureAndSettle()) {
+                    NSOperationQueue.mainQueue.addOperationWithBlock { measureAndSettle() }
+                }
                 tabFader.fade(bar, visible = barVisible)
             },
             properties = UIKitInteropProperties(
@@ -379,6 +400,9 @@ private class TabBarSynchronizer {
     private var signature: List<Pair<String, String>>? = null
     private var generation = 0
 
+    /** Set when the items changed. The shell lays the bar out and clears it once the bar has a size. */
+    var layoutPending = false
+
     /**
      * A new [generation] rebuilds the items even if nothing about them changed. With
      * [withoutAnimation], and always on a rebuild, items and selection are set without animation.
@@ -414,6 +438,7 @@ private class TabBarSynchronizer {
                 animated = false,
             )
             signature = newSignature
+            layoutPending = true
         }
         // Badges are not part of the signature: a changed badge must not rebuild the items. The value
         // is set on the existing native items instead.
