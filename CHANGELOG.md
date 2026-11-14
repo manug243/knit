@@ -8,7 +8,9 @@ While the version is `0.x`, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
-Planned for the first release, 0.1.0. Nothing is published yet.
+## [0.1.0-alpha01] - 2026-11-14
+
+First public release. It is an alpha because knit depends on Material 3 `1.12.0-alpha03`; the API can still change.
 
 ### Added
 
@@ -22,5 +24,7 @@ Planned for the first release, 0.1.0. Nothing is published yet.
 - `KnitIcons` with common icons for both platforms, tab badges, `KnitTabReselectEffect`, `KnitModalBottomSheet`, `KnitTabBarHidden` and `navigator.navigate(tab, key)`.
 - Theming of the Material bars with `KnitDefaults.colors()`, an accent color for the native iOS bars, and slots for own tab and top bars.
 - Targets: Android (`minSdk 24`), Desktop (JVM), iOS (`iosArm64`, `iosSimulatorArm64`) and Web (`js`, `wasmJs`).
+- ABI validation of the public API (`knit/api`).
 
-[Unreleased]: https://github.com/manug243/knit/commits/develop
+[Unreleased]: https://github.com/manug243/knit/compare/v0.1.0-alpha01...develop
+[0.1.0-alpha01]: https://github.com/manug243/knit/releases/tag/v0.1.0-alpha01

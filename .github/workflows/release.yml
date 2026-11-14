@@ -11,7 +11,7 @@ permissions:
 jobs:
   publish:
     # macOS is required to build and publish the iOS artifacts.
-    runs-on: macos-latest
+    runs-on: macos-26
     environment: maven-central
     steps:
       - uses: actions/checkout@v7
@@ -31,7 +31,7 @@ jobs:
             exit 1
           fi
       - name: Test
-        run: ./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:iosSimulatorArm64Test
+        run: ./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:iosSimulatorArm64Test :knit:checkKotlinAbi
       - name: Publish to Maven Central
         run: ./gradlew :knit:publishAndReleaseToMavenCentral --no-configuration-cache
         env:
