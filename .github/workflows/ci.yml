@@ -18,7 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
@@ -28,7 +28,7 @@ jobs:
       - name: Install Android SDK platform
         run: sdkmanager "platforms;android-37.0"
       - name: Verify library and example
-        run: ./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:lint :knit:compileKotlinWasmJs :example:compileKotlinDesktop :androidApp:lintDebug :androidApp:assembleDebug
+        run: ./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:lint :knit:checkKotlinAbi :knit:compileKotlinWasmJs :knit:compileKotlinJs :example:compileKotlinDesktop :androidApp:lintDebug :androidApp:assembleDebug
 
   ios:
     # iOS only runs when develop is promoted to main.
@@ -38,7 +38,7 @@ jobs:
     # Liquid Glass needs the iOS 26 SDK, so this job pins a runner image that ships Xcode 26.
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v6
         with:
           distribution: temurin

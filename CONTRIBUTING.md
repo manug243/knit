@@ -19,8 +19,8 @@ Requirements:
 Commands:
 
 ```shell
-./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:compileKotlinWasmJs
-./gradlew :knit:lint :androidApp:lintDebug
+./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:compileKotlinWasmJs :knit:compileKotlinJs
+./gradlew :knit:lint :knit:checkKotlinAbi :androidApp:lintDebug
 ./gradlew :androidApp:assembleDebug
 ./gradlew :example:run
 ```

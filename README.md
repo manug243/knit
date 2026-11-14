@@ -9,8 +9,9 @@ when built with the iOS 26 SDK), Android gets Material 3 bars with a rail from 6
 
 ## Status
 
-Work in progress, not published yet. The first release will be `0.1.0` on Maven Central as
-`io.github.manug243:knit`. Until then the API can still change. See the [changelog](CHANGELOG.md).
+`0.1.0-alpha01` is the first release on Maven Central as `io.github.manug243:knit`. It is an alpha because knit
+depends on Material 3 `1.12.0-alpha03`, and the API can still change. The public API is tracked with Kotlin's ABI
+validation (`knit/api`). See the [changelog](CHANGELOG.md).
 
 The native iOS bars were checked on an iPhone with iOS 26. On Android the tabs, the top bar and back were checked on a
 Pixel, the newer additions only in tests. The web target compiles but has not been tried in a browser.
@@ -19,10 +20,24 @@ Pixel, the newer additions only in tests. The web target compiles but has not be
 
 | knit | Kotlin | Compose Multiplatform | Navigation 3 | Android `minSdk` |
 | --- | --- | --- | --- | --- |
-| `0.1.0` (unreleased) | 2.3.21 | 1.12.2 | 1.1.2 | 24 |
+| `0.1.0-alpha01` | 2.4.21 | 1.12.2 | 1.1.2 | 24 |
 
-Targets: Android, Desktop (JVM), iOS (`iosArm64`, `iosSimulatorArm64`) and Web (`wasmJs`). Liquid Glass needs an app
+Targets: Android, Desktop (JVM), iOS (`iosArm64`, `iosSimulatorArm64`) and Web (`js`, `wasmJs`). Liquid Glass needs an app
 built with the iOS 26 SDK (Xcode 26).
+
+## Installation
+
+knit is on Maven Central. Add it to the common source set of your shared module:
+
+```kotlin
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("io.github.manug243:knit:0.1.0-alpha01")
+        }
+    }
+}
+```
 
 ## Quick start
 
@@ -112,7 +127,8 @@ tab(AppTab.Inbox, "Inbox", KnitIcons.Notifications, badge = if (unread > 0) "$un
 - One back stack per tab. The stack and the saved state of an inactive tab are kept.
 - Tapping the current tab returns to its start screen. On the start screen it runs `KnitTabReselectEffect`.
 - Back pops the screen, then leads to the first tab, then leaves the app.
-- The tab bar is only shown on a tab's start screen and hides while the keyboard is open.
+- The tab bar is only shown on a tab's start screen. On iOS it hides while the keyboard is open. The Material bar on
+  Android, Desktop and Web stays under the keyboard, so the content does not jump when the keyboard opens or closes.
 
 ## Own design on Android, Desktop and Web
 
@@ -135,7 +151,7 @@ part of knit:
 | List detail | `KnitTopBarOverride` with the list's name and two actions (`KnitIcons.Add`, `KnitIcons.Share`) |
 | Item detail | No knit top bar on purpose: an own Compose header and back button inside `Modifier.knitSafeArea()` |
 | Inbox | `badge` on the tab (unread count, `null` at zero) and a top bar action |
-| Search | The tab bar leaving for the keyboard, `imePadding()` inside `knitSafeArea()`, `navigate(tab, key)` into List detail |
+| Search | The tab bar and the keyboard (iOS: the bar leaves, Material: the keyboard covers it), `imePadding()` inside `knitSafeArea()`, `navigate(tab, key)` into List detail |
 | Settings | `KnitDefaults.colors(accent = ...)`, `KnitModalBottomSheet`, a snackbar in `knitSafeArea()`, a plain `topBar` title on About |
 
 Run it with `./gradlew :example:run` on the desktop or `./gradlew :androidApp:installDebug` on Android.
@@ -152,9 +168,11 @@ Run it with `./gradlew :example:run` on the desktop or `./gradlew :androidApp:in
 ## Build
 
 ```shell
-./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:compileKotlinWasmJs
-./gradlew :knit:lint :androidApp:lintDebug :androidApp:assembleDebug
+./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:compileKotlinWasmJs :knit:compileKotlinJs
+./gradlew :knit:lint :knit:checkKotlinAbi :androidApp:lintDebug :androidApp:assembleDebug
 ```
+
+After an intended public API change, run `./gradlew :knit:updateKotlinAbi` and commit the updated files in `knit/api`.
 
 The project requires JDK 21 and Android SDK platform 37. The iOS tests (`./gradlew :knit:iosSimulatorArm64Test`) and
 the iOS demo need macOS with Xcode 26.

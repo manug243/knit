@@ -32,6 +32,10 @@ import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -93,6 +97,8 @@ internal fun MaterialShell(
         }
     }
     val system = systemSafePadding()
+    val density = LocalDensity.current
+    var barHeight by remember { mutableStateOf(0.dp) }
     val layoutDirection = LocalLayoutDirection.current
     // What is left of the system insets for the screen. A visible bar handles the inset at its edge
     // itself, so the screen must not add it again.
@@ -194,11 +200,14 @@ internal fun MaterialShell(
         } else {
             Column(modifier = Modifier.fillMaxSize()) {
                 topBarSlot()
-                // The bar handles the navigation bar inset itself, so nested scaffolds must not add it again.
-                val contentModifier = if (barVisible) {
-                    contentArea.consumeWindowInsets(NavigationBarDefaults.windowInsets)
-                } else {
-                    contentArea
+                // The bar stays while the keyboard is open and the keyboard covers it. Its height counts as
+                // already consumed, so an imePadding() in a screen leaves no gap above the keyboard and nothing
+                // jumps when the keyboard opens or closes. The bar handles the navigation bar inset itself,
+                // which this also covers. Until the bar is measured, the navigation bar inset stands in.
+                val contentModifier = when {
+                    !barVisible -> contentArea
+                    barHeight > 0.dp -> contentArea.consumeWindowInsets(PaddingValues(bottom = barHeight))
+                    else -> contentArea.consumeWindowInsets(NavigationBarDefaults.windowInsets)
                 }
                 androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f).then(contentModifier)) {
                     movableContent(safePadding(wide = false))
@@ -207,6 +216,7 @@ internal fun MaterialShell(
                     visible = barVisible,
                     enter = expandVertically(),
                     exit = shrinkVertically(),
+                    modifier = Modifier.onSizeChanged { barHeight = with(density) { it.height.toDp() } },
                 ) {
                     val custom = style.tabBar
                     if (custom != null) {

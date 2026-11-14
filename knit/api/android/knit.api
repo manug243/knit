@@ -1,0 +1,157 @@
+public final class io/github/manug243/knit/ComposableSingletons$MaterialShellKt {
+	public static final field INSTANCE Lio/github/manug243/knit/ComposableSingletons$MaterialShellKt;
+	public fun <init> ()V
+	public final fun getLambda$830910628$io_github_manug243_knit ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class io/github/manug243/knit/KnitAction {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Lio/github/manug243/knit/KnitIcon;Lkotlin/jvm/functions/Function0;)V
+	public final fun getIcon ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getLabel ()Ljava/lang/String;
+	public final fun getOnClick ()Lkotlin/jvm/functions/Function0;
+}
+
+public final class io/github/manug243/knit/KnitChromeKt {
+	public static final fun KnitTabBarHidden (Landroidx/compose/runtime/Composer;I)V
+	public static final fun knitContentPadding (Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/Modifier;
+	public static final fun knitSafeArea (Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/Modifier;
+	public static final fun knitSafePadding (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/layout/PaddingValues;
+}
+
+public final class io/github/manug243/knit/KnitColors {
+	public static final field $stable I
+	public final fun getAccent-0d7_KjU ()J
+	public final fun getScreenBackground-0d7_KjU ()J
+	public final fun getTabBarContainer-0d7_KjU ()J
+	public final fun getTabBarContent-0d7_KjU ()J
+	public final fun getTabBarIndicator-0d7_KjU ()J
+	public final fun getTabBarSelectedContent-0d7_KjU ()J
+	public final fun getTopBarContainer-0d7_KjU ()J
+	public final fun getTopBarContent-0d7_KjU ()J
+}
+
+public final class io/github/manug243/knit/KnitDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lio/github/manug243/knit/KnitDefaults;
+	public final fun colors-oq7We08 (JJJJJJJJLandroidx/compose/runtime/Composer;II)Lio/github/manug243/knit/KnitColors;
+}
+
+public final class io/github/manug243/knit/KnitIcon {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Landroidx/compose/ui/graphics/vector/ImageVector;)V
+	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function3;)V
+	public final fun Content-Iv8Zu3U (JLandroidx/compose/runtime/Composer;II)V
+	public final fun getSfSymbol ()Ljava/lang/String;
+}
+
+public final class io/github/manug243/knit/KnitIcons {
+	public static final field $stable I
+	public static final field INSTANCE Lio/github/manug243/knit/KnitIcons;
+	public final fun getAdd ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getCheck ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getClose ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getDelete ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getEdit ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getFavorite ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getHome ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getInfo ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getList ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getMore ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getNotifications ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getPerson ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getSearch ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getSettings ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getShare ()Lio/github/manug243/knit/KnitIcon;
+}
+
+public final class io/github/manug243/knit/KnitModalBottomSheetKt {
+	public static final fun KnitModalBottomSheet (Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class io/github/manug243/knit/KnitNavigator {
+	public static final field $stable I
+	public final fun back ()Z
+	public final fun backStack (Lio/github/manug243/knit/KnitTab;)Ljava/util/List;
+	public final fun getCurrentBackStack ()Ljava/util/List;
+	public final fun getCurrentTab ()Lio/github/manug243/knit/KnitTab;
+	public final fun getHomeTab ()Lio/github/manug243/knit/KnitTab;
+	public final fun getTabs ()Ljava/util/List;
+	public final fun isAtTabRoot ()Z
+	public final fun navigate (Landroidx/navigation3/runtime/NavKey;)V
+	public final fun navigate (Lio/github/manug243/knit/KnitTab;Landroidx/navigation3/runtime/NavKey;)V
+	public final fun pop ()Z
+	public final fun popToRoot ()V
+	public final fun select (Lio/github/manug243/knit/KnitTab;)V
+}
+
+public final class io/github/manug243/knit/KnitNavigatorKt {
+	public static final fun rememberKnitNavigator (Ljava/util/List;Landroidx/savedstate/serialization/SavedStateConfiguration;Lio/github/manug243/knit/KnitTab;Landroidx/compose/runtime/Composer;II)Lio/github/manug243/knit/KnitNavigator;
+}
+
+public final class io/github/manug243/knit/KnitRoutes {
+	public static final field $stable I
+	public fun <init> ()V
+	public final fun getRegistrations ()Ljava/util/List;
+}
+
+public final class io/github/manug243/knit/KnitRoutesKt {
+	public static final fun knitRoutes (Lkotlin/jvm/functions/Function1;)Landroidx/savedstate/serialization/SavedStateConfiguration;
+	public static final fun sealedRoutesConfiguration (Lkotlin/reflect/KClass;Lkotlinx/serialization/KSerializer;)Landroidx/savedstate/serialization/SavedStateConfiguration;
+}
+
+public final class io/github/manug243/knit/KnitScaffoldKt {
+	public static final fun KnitScaffold (Lio/github/manug243/knit/KnitNavigator;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;Lio/github/manug243/knit/KnitColors;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
+	public static final fun getLocalKnitContentPadding ()Landroidx/compose/runtime/ProvidableCompositionLocal;
+}
+
+public abstract interface class io/github/manug243/knit/KnitTab {
+	public abstract fun getRoot ()Landroidx/navigation3/runtime/NavKey;
+}
+
+public final class io/github/manug243/knit/KnitTabBarItem {
+	public static final field $stable I
+	public final fun getBadge ()Ljava/lang/String;
+	public final fun getIcon ()Lio/github/manug243/knit/KnitIcon;
+	public final fun getOnClick ()Lkotlin/jvm/functions/Function0;
+	public final fun getSelected ()Z
+	public final fun getTitle ()Ljava/lang/String;
+}
+
+public final class io/github/manug243/knit/KnitTabBarState {
+	public static final field $stable I
+	public final fun getItems ()Ljava/util/List;
+	public final fun getWide ()Z
+}
+
+public final class io/github/manug243/knit/KnitTabReselectKt {
+	public static final fun KnitTabReselectEffect (Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;I)V
+}
+
+public final class io/github/manug243/knit/KnitTabsScope {
+	public static final field $stable I
+	public final fun tab (Lio/github/manug243/knit/KnitTab;Ljava/lang/String;Lio/github/manug243/knit/KnitIcon;Ljava/lang/String;)V
+	public static synthetic fun tab$default (Lio/github/manug243/knit/KnitTabsScope;Lio/github/manug243/knit/KnitTab;Ljava/lang/String;Lio/github/manug243/knit/KnitIcon;Ljava/lang/String;ILjava/lang/Object;)V
+}
+
+public final class io/github/manug243/knit/KnitTopBar {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getActions ()Ljava/util/List;
+	public final fun getTitle ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/manug243/knit/KnitTopBarOverrideKt {
+	public static final fun KnitTopBarOverride (Lio/github/manug243/knit/KnitTopBar;Landroidx/compose/runtime/Composer;I)V
+}
+
+public final class io/github/manug243/knit/KnitTopBarState {
+	public static final field $stable I
+	public final fun getActions ()Ljava/util/List;
+	public final fun getOnBack ()Lkotlin/jvm/functions/Function0;
+	public final fun getShowBack ()Z
+	public final fun getTitle ()Ljava/lang/String;
+}
+
