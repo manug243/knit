@@ -46,6 +46,10 @@ private const val TabFadeMillis = 180
  * The status bar inset itself is not part of the top value, add the system insets as usual.
  *
  * Most screens want [knitSafePadding] instead, which already contains the system insets.
+ *
+ * Only [knitContentPadding] and your own code read this value, knit's bars do not. Providing it
+ * yourself is fine: in previews and tests to simulate the iOS bars outside of [KnitScaffold], or to
+ * pass zero to children once a screen has applied the padding itself.
  */
 public val LocalKnitContentPadding: androidx.compose.runtime.ProvidableCompositionLocal<PaddingValues> =
     staticCompositionLocalOf { PaddingValues(0.dp) }
