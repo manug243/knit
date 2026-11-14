@@ -85,6 +85,8 @@ internal actual fun KnitPlatformShell(
     selectedIndex: Int,
     barVisible: Boolean,
     barAllowed: Boolean,
+    // The native bar floats above the content and leaves for the keyboard; rootBarHeight keeps its area.
+    @Suppress("UNUSED_PARAMETER") barVisibleBehindKeyboard: Boolean,
     onSelect: (Int) -> Unit,
     topBar: ShellTopBar?,
     // Only the accent applies. The other colors and the custom bars are for the Compose bars of the
@@ -142,7 +144,10 @@ internal actual fun KnitPlatformShell(
     val tabBarOnScreen = barVisible || !tabFader.parked
 
     // What a start screen of a tab keeps clear at the bottom. Navigation does not change it, so the
-    // screen below does not move while a detail screen slides in.
+    // screen below does not move while a detail screen slides in. The keyboard does not change it either:
+    // the keyboard covers that area, and a screen that pads for the keyboard with imePadding() inside
+    // knitSafeArea() counts it as already padded. Otherwise the content would drop to the bottom when the
+    // keyboard closes and move up again while the bar area comes back.
     val rootBarHeight by animateDpAsState(if (barAllowed) barHeight else 0.dp)
     val shellPadding = ShellPadding { hasTopBar, isTabRoot ->
         val top = if (hasTopBar) ClassicNavigationBarHeight else 0.dp
