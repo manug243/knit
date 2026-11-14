@@ -8,6 +8,10 @@ While the version is `0.x`, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+### Changed
+
+- Navigation 3 updated from 1.1.2 to 1.2.0.
+
 ## [0.1.0-alpha01] - 2026-11-14
 
 First public release. It is an alpha because knit depends on Material 3 `1.12.0-alpha03`; the API can still change.

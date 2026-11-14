@@ -21,6 +21,7 @@ Pixel, the newer additions only in tests. The web target compiles but has not be
 | knit | Kotlin | Compose Multiplatform | Navigation 3 | Android `minSdk` |
 | --- | --- | --- | --- | --- |
 | `0.1.0-alpha01` | 2.4.21 | 1.12.2 | 1.1.2 | 24 |
+| next (unreleased) | 2.4.21 | 1.12.2 | 1.2.0 | 24 |
 
 Targets: Android, Desktop (JVM), iOS (`iosArm64`, `iosSimulatorArm64`) and Web (`js`, `wasmJs`). Liquid Glass needs an app
 built with the iOS 26 SDK (Xcode 26).
