@@ -85,6 +85,8 @@ internal actual fun KnitPlatformShell(
     selectedIndex: Int,
     barVisible: Boolean,
     barAllowed: Boolean,
+    // The native bar floats above the content and leaves for the keyboard, nothing moves below it.
+    @Suppress("UNUSED_PARAMETER") barVisibleBehindKeyboard: Boolean,
     onSelect: (Int) -> Unit,
     topBar: ShellTopBar?,
     // Only the accent applies. The other colors and the custom bars are for the Compose bars of the

@@ -112,7 +112,8 @@ tab(AppTab.Inbox, "Inbox", KnitIcons.Notifications, badge = if (unread > 0) "$un
 - One back stack per tab. The stack and the saved state of an inactive tab are kept.
 - Tapping the current tab returns to its start screen. On the start screen it runs `KnitTabReselectEffect`.
 - Back pops the screen, then leads to the first tab, then leaves the app.
-- The tab bar is only shown on a tab's start screen and hides while the keyboard is open.
+- The tab bar is only shown on a tab's start screen. On iOS it hides while the keyboard is open. The Material bar on
+  Android, Desktop and Web stays under the keyboard, so the content does not jump when the keyboard opens or closes.
 
 ## Own design on Android, Desktop and Web
 
@@ -135,7 +136,7 @@ part of knit:
 | List detail | `KnitTopBarOverride` with the list's name and two actions (`KnitIcons.Add`, `KnitIcons.Share`) |
 | Item detail | No knit top bar on purpose: an own Compose header and back button inside `Modifier.knitSafeArea()` |
 | Inbox | `badge` on the tab (unread count, `null` at zero) and a top bar action |
-| Search | The tab bar leaving for the keyboard, `imePadding()` inside `knitSafeArea()`, `navigate(tab, key)` into List detail |
+| Search | The tab bar and the keyboard (iOS: the bar leaves, Material: the keyboard covers it), `imePadding()` inside `knitSafeArea()`, `navigate(tab, key)` into List detail |
 | Settings | `KnitDefaults.colors(accent = ...)`, `KnitModalBottomSheet`, a snackbar in `knitSafeArea()`, a plain `topBar` title on About |
 
 Run it with `./gradlew :example:run` on the desktop or `./gradlew :androidApp:installDebug` on Android.

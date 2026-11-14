@@ -160,6 +160,9 @@ public fun <T : KnitTab> KnitScaffold(
     val hideRequests = remember { TabBarHideRequests() }
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val barAllowed = !imeVisible && hideRequests.count == 0
+    // Where the bar sits next to the content (Material), it stays while the keyboard is open: the keyboard
+    // covers it, and the content does not jump when the keyboard opens or closes.
+    val barRequested = navigator.isAtTabRoot && hideRequests.count == 0
     val barItems = items.map { ShellItem(it.title, it.icon, it.badge) }
     val selectedIndex = items.indexOfFirst { it.tab == navigator.currentTab }
 
@@ -180,6 +183,7 @@ public fun <T : KnitTab> KnitScaffold(
         selectedIndex = selectedIndex,
         barVisible = navigator.isAtTabRoot && barAllowed,
         barAllowed = barAllowed,
+        barVisibleBehindKeyboard = barRequested,
         onSelect = { index -> navigator.select(items[index].tab) },
         topBar = shellTopBar,
         style = ShellStyle(colors, tabBar, topBarContent),
@@ -212,6 +216,8 @@ internal class ShellItem(
  * Draws the platform's chrome around [content] and provides [LocalKnitContentPadding].
  * [selectedIndex] and [onSelect] refer to positions in [items]. [barAllowed] is false while something
  * other than navigation hides the tab bar: the keyboard or a [KnitTabBarHidden].
+ * [barVisibleBehindKeyboard] is [barVisible] without the keyboard, for bars that sit next to the content
+ * and stay under an open keyboard instead of leaving (and moving the content).
  */
 @Composable
 internal expect fun KnitPlatformShell(
@@ -219,6 +225,7 @@ internal expect fun KnitPlatformShell(
     selectedIndex: Int,
     barVisible: Boolean,
     barAllowed: Boolean,
+    barVisibleBehindKeyboard: Boolean,
     onSelect: (Int) -> Unit,
     topBar: ShellTopBar?,
     style: ShellStyle,
