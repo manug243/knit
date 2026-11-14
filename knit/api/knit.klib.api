@@ -1,0 +1,206 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <io.github.manug243:knit>
+abstract interface io.github.manug243.knit/KnitTab { // io.github.manug243.knit/KnitTab|null[0]
+    abstract val root // io.github.manug243.knit/KnitTab.root|{}root[0]
+        abstract fun <get-root>(): androidx.navigation3.runtime/NavKey // io.github.manug243.knit/KnitTab.root.<get-root>|<get-root>(){}[0]
+}
+
+final class <#A: io.github.manug243.knit/KnitTab> io.github.manug243.knit/KnitNavigator { // io.github.manug243.knit/KnitNavigator|null[0]
+    final val currentBackStack // io.github.manug243.knit/KnitNavigator.currentBackStack|{}currentBackStack[0]
+        final fun <get-currentBackStack>(): kotlin.collections/MutableList<androidx.navigation3.runtime/NavKey> // io.github.manug243.knit/KnitNavigator.currentBackStack.<get-currentBackStack>|<get-currentBackStack>(){}[0]
+    final val homeTab // io.github.manug243.knit/KnitNavigator.homeTab|{}homeTab[0]
+        final fun <get-homeTab>(): #A // io.github.manug243.knit/KnitNavigator.homeTab.<get-homeTab>|<get-homeTab>(){}[0]
+    final val isAtTabRoot // io.github.manug243.knit/KnitNavigator.isAtTabRoot|{}isAtTabRoot[0]
+        final fun <get-isAtTabRoot>(): kotlin/Boolean // io.github.manug243.knit/KnitNavigator.isAtTabRoot.<get-isAtTabRoot>|<get-isAtTabRoot>(){}[0]
+    final val tabs // io.github.manug243.knit/KnitNavigator.tabs|{}tabs[0]
+        final fun <get-tabs>(): kotlin.collections/List<#A> // io.github.manug243.knit/KnitNavigator.tabs.<get-tabs>|<get-tabs>(){}[0]
+
+    final var currentTab // io.github.manug243.knit/KnitNavigator.currentTab|{}currentTab[0]
+        final fun <get-currentTab>(): #A // io.github.manug243.knit/KnitNavigator.currentTab.<get-currentTab>|<get-currentTab>(){}[0]
+
+    final fun back(): kotlin/Boolean // io.github.manug243.knit/KnitNavigator.back|back(){}[0]
+    final fun backStack(#A): kotlin.collections/MutableList<androidx.navigation3.runtime/NavKey> // io.github.manug243.knit/KnitNavigator.backStack|backStack(1:0){}[0]
+    final fun navigate(#A, androidx.navigation3.runtime/NavKey) // io.github.manug243.knit/KnitNavigator.navigate|navigate(1:0;androidx.navigation3.runtime.NavKey){}[0]
+    final fun navigate(androidx.navigation3.runtime/NavKey) // io.github.manug243.knit/KnitNavigator.navigate|navigate(androidx.navigation3.runtime.NavKey){}[0]
+    final fun pop(): kotlin/Boolean // io.github.manug243.knit/KnitNavigator.pop|pop(){}[0]
+    final fun popToRoot() // io.github.manug243.knit/KnitNavigator.popToRoot|popToRoot(){}[0]
+    final fun select(#A) // io.github.manug243.knit/KnitNavigator.select|select(1:0){}[0]
+}
+
+final class <#A: io.github.manug243.knit/KnitTab> io.github.manug243.knit/KnitTabsScope { // io.github.manug243.knit/KnitTabsScope|null[0]
+    final fun tab(#A, kotlin/String, io.github.manug243.knit/KnitIcon, kotlin/String? = ...) // io.github.manug243.knit/KnitTabsScope.tab|tab(1:0;kotlin.String;io.github.manug243.knit.KnitIcon;kotlin.String?){}[0]
+}
+
+final class io.github.manug243.knit/KnitAction { // io.github.manug243.knit/KnitAction|null[0]
+    constructor <init>(kotlin/String, io.github.manug243.knit/KnitIcon, kotlin/Function0<kotlin/Unit>) // io.github.manug243.knit/KnitAction.<init>|<init>(kotlin.String;io.github.manug243.knit.KnitIcon;kotlin.Function0<kotlin.Unit>){}[0]
+
+    final val icon // io.github.manug243.knit/KnitAction.icon|{}icon[0]
+        final fun <get-icon>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitAction.icon.<get-icon>|<get-icon>(){}[0]
+    final val label // io.github.manug243.knit/KnitAction.label|{}label[0]
+        final fun <get-label>(): kotlin/String // io.github.manug243.knit/KnitAction.label.<get-label>|<get-label>(){}[0]
+    final val onClick // io.github.manug243.knit/KnitAction.onClick|{}onClick[0]
+        final fun <get-onClick>(): kotlin/Function0<kotlin/Unit> // io.github.manug243.knit/KnitAction.onClick.<get-onClick>|<get-onClick>(){}[0]
+}
+
+final class io.github.manug243.knit/KnitColors { // io.github.manug243.knit/KnitColors|null[0]
+    final val accent // io.github.manug243.knit/KnitColors.accent|{}accent[0]
+        final fun <get-accent>(): androidx.compose.ui.graphics/Color // io.github.manug243.knit/KnitColors.accent.<get-accent>|<get-accent>(){}[0]
+    final val screenBackground // io.github.manug243.knit/KnitColors.screenBackground|{}screenBackground[0]
+        final fun <get-screenBackground>(): androidx.compose.ui.graphics/Color // io.github.manug243.knit/KnitColors.screenBackground.<get-screenBackground>|<get-screenBackground>(){}[0]
+    final val tabBarContainer // io.github.manug243.knit/KnitColors.tabBarContainer|{}tabBarContainer[0]
+        final fun <get-tabBarContainer>(): androidx.compose.ui.graphics/Color // io.github.manug243.knit/KnitColors.tabBarContainer.<get-tabBarContainer>|<get-tabBarContainer>(){}[0]
+    final val tabBarContent // io.github.manug243.knit/KnitColors.tabBarContent|{}tabBarContent[0]
+        final fun <get-tabBarContent>(): androidx.compose.ui.graphics/Color // io.github.manug243.knit/KnitColors.tabBarContent.<get-tabBarContent>|<get-tabBarContent>(){}[0]
+    final val tabBarIndicator // io.github.manug243.knit/KnitColors.tabBarIndicator|{}tabBarIndicator[0]
+        final fun <get-tabBarIndicator>(): androidx.compose.ui.graphics/Color // io.github.manug243.knit/KnitColors.tabBarIndicator.<get-tabBarIndicator>|<get-tabBarIndicator>(){}[0]
+    final val tabBarSelectedContent // io.github.manug243.knit/KnitColors.tabBarSelectedContent|{}tabBarSelectedContent[0]
+        final fun <get-tabBarSelectedContent>(): androidx.compose.ui.graphics/Color // io.github.manug243.knit/KnitColors.tabBarSelectedContent.<get-tabBarSelectedContent>|<get-tabBarSelectedContent>(){}[0]
+    final val topBarContainer // io.github.manug243.knit/KnitColors.topBarContainer|{}topBarContainer[0]
+        final fun <get-topBarContainer>(): androidx.compose.ui.graphics/Color // io.github.manug243.knit/KnitColors.topBarContainer.<get-topBarContainer>|<get-topBarContainer>(){}[0]
+    final val topBarContent // io.github.manug243.knit/KnitColors.topBarContent|{}topBarContent[0]
+        final fun <get-topBarContent>(): androidx.compose.ui.graphics/Color // io.github.manug243.knit/KnitColors.topBarContent.<get-topBarContent>|<get-topBarContent>(){}[0]
+}
+
+final class io.github.manug243.knit/KnitIcon { // io.github.manug243.knit/KnitIcon|null[0]
+    constructor <init>(kotlin/String, androidx.compose.ui.graphics.vector/ImageVector) // io.github.manug243.knit/KnitIcon.<init>|<init>(kotlin.String;androidx.compose.ui.graphics.vector.ImageVector){}[0]
+    constructor <init>(kotlin/String, kotlin/Function3<androidx.compose.ui.graphics/Color, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>) // io.github.manug243.knit/KnitIcon.<init>|<init>(kotlin.String;kotlin.Function3<androidx.compose.ui.graphics.Color,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>){}[0]
+
+    final val sfSymbol // io.github.manug243.knit/KnitIcon.sfSymbol|{}sfSymbol[0]
+        final fun <get-sfSymbol>(): kotlin/String // io.github.manug243.knit/KnitIcon.sfSymbol.<get-sfSymbol>|<get-sfSymbol>(){}[0]
+
+    final fun Content(androidx.compose.ui.graphics/Color, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // io.github.manug243.knit/KnitIcon.Content|Content(androidx.compose.ui.graphics.Color;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+}
+
+final class io.github.manug243.knit/KnitRoutes { // io.github.manug243.knit/KnitRoutes|null[0]
+    constructor <init>() // io.github.manug243.knit/KnitRoutes.<init>|<init>(){}[0]
+
+    final val registrations // io.github.manug243.knit/KnitRoutes.registrations|{}registrations[0]
+        final fun <get-registrations>(): kotlin.collections/MutableList<kotlin/Function1<kotlinx.serialization.modules/PolymorphicModuleBuilder<androidx.navigation3.runtime/NavKey>, kotlin/Unit>> // io.github.manug243.knit/KnitRoutes.registrations.<get-registrations>|<get-registrations>(){}[0]
+
+    final inline fun <#A1: reified androidx.navigation3.runtime/NavKey> route() // io.github.manug243.knit/KnitRoutes.route|route(){0§<androidx.navigation3.runtime.NavKey>}[0]
+}
+
+final class io.github.manug243.knit/KnitTabBarItem { // io.github.manug243.knit/KnitTabBarItem|null[0]
+    final val badge // io.github.manug243.knit/KnitTabBarItem.badge|{}badge[0]
+        final fun <get-badge>(): kotlin/String? // io.github.manug243.knit/KnitTabBarItem.badge.<get-badge>|<get-badge>(){}[0]
+    final val icon // io.github.manug243.knit/KnitTabBarItem.icon|{}icon[0]
+        final fun <get-icon>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitTabBarItem.icon.<get-icon>|<get-icon>(){}[0]
+    final val onClick // io.github.manug243.knit/KnitTabBarItem.onClick|{}onClick[0]
+        final fun <get-onClick>(): kotlin/Function0<kotlin/Unit> // io.github.manug243.knit/KnitTabBarItem.onClick.<get-onClick>|<get-onClick>(){}[0]
+    final val selected // io.github.manug243.knit/KnitTabBarItem.selected|{}selected[0]
+        final fun <get-selected>(): kotlin/Boolean // io.github.manug243.knit/KnitTabBarItem.selected.<get-selected>|<get-selected>(){}[0]
+    final val title // io.github.manug243.knit/KnitTabBarItem.title|{}title[0]
+        final fun <get-title>(): kotlin/String // io.github.manug243.knit/KnitTabBarItem.title.<get-title>|<get-title>(){}[0]
+}
+
+final class io.github.manug243.knit/KnitTabBarState { // io.github.manug243.knit/KnitTabBarState|null[0]
+    final val items // io.github.manug243.knit/KnitTabBarState.items|{}items[0]
+        final fun <get-items>(): kotlin.collections/List<io.github.manug243.knit/KnitTabBarItem> // io.github.manug243.knit/KnitTabBarState.items.<get-items>|<get-items>(){}[0]
+    final val wide // io.github.manug243.knit/KnitTabBarState.wide|{}wide[0]
+        final fun <get-wide>(): kotlin/Boolean // io.github.manug243.knit/KnitTabBarState.wide.<get-wide>|<get-wide>(){}[0]
+}
+
+final class io.github.manug243.knit/KnitTopBar { // io.github.manug243.knit/KnitTopBar|null[0]
+    constructor <init>(kotlin/String, kotlin.collections/List<io.github.manug243.knit/KnitAction> = ...) // io.github.manug243.knit/KnitTopBar.<init>|<init>(kotlin.String;kotlin.collections.List<io.github.manug243.knit.KnitAction>){}[0]
+
+    final val actions // io.github.manug243.knit/KnitTopBar.actions|{}actions[0]
+        final fun <get-actions>(): kotlin.collections/List<io.github.manug243.knit/KnitAction> // io.github.manug243.knit/KnitTopBar.actions.<get-actions>|<get-actions>(){}[0]
+    final val title // io.github.manug243.knit/KnitTopBar.title|{}title[0]
+        final fun <get-title>(): kotlin/String // io.github.manug243.knit/KnitTopBar.title.<get-title>|<get-title>(){}[0]
+
+    final fun toString(): kotlin/String // io.github.manug243.knit/KnitTopBar.toString|toString(){}[0]
+}
+
+final class io.github.manug243.knit/KnitTopBarState { // io.github.manug243.knit/KnitTopBarState|null[0]
+    final val actions // io.github.manug243.knit/KnitTopBarState.actions|{}actions[0]
+        final fun <get-actions>(): kotlin.collections/List<io.github.manug243.knit/KnitAction> // io.github.manug243.knit/KnitTopBarState.actions.<get-actions>|<get-actions>(){}[0]
+    final val onBack // io.github.manug243.knit/KnitTopBarState.onBack|{}onBack[0]
+        final fun <get-onBack>(): kotlin/Function0<kotlin/Unit> // io.github.manug243.knit/KnitTopBarState.onBack.<get-onBack>|<get-onBack>(){}[0]
+    final val showBack // io.github.manug243.knit/KnitTopBarState.showBack|{}showBack[0]
+        final fun <get-showBack>(): kotlin/Boolean // io.github.manug243.knit/KnitTopBarState.showBack.<get-showBack>|<get-showBack>(){}[0]
+    final val title // io.github.manug243.knit/KnitTopBarState.title|{}title[0]
+        final fun <get-title>(): kotlin/String // io.github.manug243.knit/KnitTopBarState.title.<get-title>|<get-title>(){}[0]
+}
+
+final object io.github.manug243.knit/KnitDefaults { // io.github.manug243.knit/KnitDefaults|null[0]
+    final fun colors(androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int): io.github.manug243.knit/KnitColors // io.github.manug243.knit/KnitDefaults.colors|colors(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+}
+
+final object io.github.manug243.knit/KnitIcons { // io.github.manug243.knit/KnitIcons|null[0]
+    final val Add // io.github.manug243.knit/KnitIcons.Add|{}Add[0]
+        final fun <get-Add>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.Add.<get-Add>|<get-Add>(){}[0]
+    final val Check // io.github.manug243.knit/KnitIcons.Check|{}Check[0]
+        final fun <get-Check>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.Check.<get-Check>|<get-Check>(){}[0]
+    final val Close // io.github.manug243.knit/KnitIcons.Close|{}Close[0]
+        final fun <get-Close>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.Close.<get-Close>|<get-Close>(){}[0]
+    final val Delete // io.github.manug243.knit/KnitIcons.Delete|{}Delete[0]
+        final fun <get-Delete>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.Delete.<get-Delete>|<get-Delete>(){}[0]
+    final val Edit // io.github.manug243.knit/KnitIcons.Edit|{}Edit[0]
+        final fun <get-Edit>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.Edit.<get-Edit>|<get-Edit>(){}[0]
+    final val Favorite // io.github.manug243.knit/KnitIcons.Favorite|{}Favorite[0]
+        final fun <get-Favorite>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.Favorite.<get-Favorite>|<get-Favorite>(){}[0]
+    final val Home // io.github.manug243.knit/KnitIcons.Home|{}Home[0]
+        final fun <get-Home>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.Home.<get-Home>|<get-Home>(){}[0]
+    final val Info // io.github.manug243.knit/KnitIcons.Info|{}Info[0]
+        final fun <get-Info>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.Info.<get-Info>|<get-Info>(){}[0]
+    final val List // io.github.manug243.knit/KnitIcons.List|{}List[0]
+        final fun <get-List>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.List.<get-List>|<get-List>(){}[0]
+    final val More // io.github.manug243.knit/KnitIcons.More|{}More[0]
+        final fun <get-More>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.More.<get-More>|<get-More>(){}[0]
+    final val Notifications // io.github.manug243.knit/KnitIcons.Notifications|{}Notifications[0]
+        final fun <get-Notifications>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.Notifications.<get-Notifications>|<get-Notifications>(){}[0]
+    final val Person // io.github.manug243.knit/KnitIcons.Person|{}Person[0]
+        final fun <get-Person>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.Person.<get-Person>|<get-Person>(){}[0]
+    final val Search // io.github.manug243.knit/KnitIcons.Search|{}Search[0]
+        final fun <get-Search>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.Search.<get-Search>|<get-Search>(){}[0]
+    final val Settings // io.github.manug243.knit/KnitIcons.Settings|{}Settings[0]
+        final fun <get-Settings>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.Settings.<get-Settings>|<get-Settings>(){}[0]
+    final val Share // io.github.manug243.knit/KnitIcons.Share|{}Share[0]
+        final fun <get-Share>(): io.github.manug243.knit/KnitIcon // io.github.manug243.knit/KnitIcons.Share.<get-Share>|<get-Share>(){}[0]
+}
+
+final val io.github.manug243.knit/LocalKnitContentPadding // io.github.manug243.knit/LocalKnitContentPadding|{}LocalKnitContentPadding[0]
+    final fun <get-LocalKnitContentPadding>(): androidx.compose.runtime/ProvidableCompositionLocal<androidx.compose.foundation.layout/PaddingValues> // io.github.manug243.knit/LocalKnitContentPadding.<get-LocalKnitContentPadding>|<get-LocalKnitContentPadding>(){}[0]
+final val io.github.manug243.knit/io_github_manug243_knit_KnitAction$stableprop // io.github.manug243.knit/io_github_manug243_knit_KnitAction$stableprop|#static{}io_github_manug243_knit_KnitAction$stableprop[0]
+final val io.github.manug243.knit/io_github_manug243_knit_KnitColors$stableprop // io.github.manug243.knit/io_github_manug243_knit_KnitColors$stableprop|#static{}io_github_manug243_knit_KnitColors$stableprop[0]
+final val io.github.manug243.knit/io_github_manug243_knit_KnitDefaults$stableprop // io.github.manug243.knit/io_github_manug243_knit_KnitDefaults$stableprop|#static{}io_github_manug243_knit_KnitDefaults$stableprop[0]
+final val io.github.manug243.knit/io_github_manug243_knit_KnitIcon$stableprop // io.github.manug243.knit/io_github_manug243_knit_KnitIcon$stableprop|#static{}io_github_manug243_knit_KnitIcon$stableprop[0]
+final val io.github.manug243.knit/io_github_manug243_knit_KnitIcons$stableprop // io.github.manug243.knit/io_github_manug243_knit_KnitIcons$stableprop|#static{}io_github_manug243_knit_KnitIcons$stableprop[0]
+final val io.github.manug243.knit/io_github_manug243_knit_KnitNavigator$stableprop // io.github.manug243.knit/io_github_manug243_knit_KnitNavigator$stableprop|#static{}io_github_manug243_knit_KnitNavigator$stableprop[0]
+final val io.github.manug243.knit/io_github_manug243_knit_KnitRoutes$stableprop // io.github.manug243.knit/io_github_manug243_knit_KnitRoutes$stableprop|#static{}io_github_manug243_knit_KnitRoutes$stableprop[0]
+final val io.github.manug243.knit/io_github_manug243_knit_KnitTabBarItem$stableprop // io.github.manug243.knit/io_github_manug243_knit_KnitTabBarItem$stableprop|#static{}io_github_manug243_knit_KnitTabBarItem$stableprop[0]
+final val io.github.manug243.knit/io_github_manug243_knit_KnitTabBarState$stableprop // io.github.manug243.knit/io_github_manug243_knit_KnitTabBarState$stableprop|#static{}io_github_manug243_knit_KnitTabBarState$stableprop[0]
+final val io.github.manug243.knit/io_github_manug243_knit_KnitTabsScope$stableprop // io.github.manug243.knit/io_github_manug243_knit_KnitTabsScope$stableprop|#static{}io_github_manug243_knit_KnitTabsScope$stableprop[0]
+final val io.github.manug243.knit/io_github_manug243_knit_KnitTopBar$stableprop // io.github.manug243.knit/io_github_manug243_knit_KnitTopBar$stableprop|#static{}io_github_manug243_knit_KnitTopBar$stableprop[0]
+final val io.github.manug243.knit/io_github_manug243_knit_KnitTopBarState$stableprop // io.github.manug243.knit/io_github_manug243_knit_KnitTopBarState$stableprop|#static{}io_github_manug243_knit_KnitTopBarState$stableprop[0]
+
+final fun (androidx.compose.ui/Modifier).io.github.manug243.knit/knitContentPadding(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui/Modifier // io.github.manug243.knit/knitContentPadding|knitContentPadding@androidx.compose.ui.Modifier(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+final fun (androidx.compose.ui/Modifier).io.github.manug243.knit/knitSafeArea(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui/Modifier // io.github.manug243.knit/knitSafeArea|knitSafeArea@androidx.compose.ui.Modifier(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+final fun <#A: androidx.navigation3.runtime/NavKey> io.github.manug243.knit/sealedRoutesConfiguration(kotlin.reflect/KClass<#A>, kotlinx.serialization/KSerializer<#A>): androidx.savedstate.serialization/SavedStateConfiguration // io.github.manug243.knit/sealedRoutesConfiguration|sealedRoutesConfiguration(kotlin.reflect.KClass<0:0>;kotlinx.serialization.KSerializer<0:0>){0§<androidx.navigation3.runtime.NavKey>}[0]
+final fun <#A: io.github.manug243.knit/KnitTab> io.github.manug243.knit/KnitScaffold(io.github.manug243.knit/KnitNavigator<#A>, kotlin/Function3<io.github.manug243.knit/KnitTabsScope<#A>, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, kotlin/Function1<androidx.navigation3.runtime/NavKey, androidx.navigation3.runtime/NavEntry<androidx.navigation3.runtime/NavKey>>, androidx.compose.ui/Modifier?, kotlin/Function1<androidx.navigation3.runtime/NavKey, io.github.manug243.knit/KnitTopBar?>?, io.github.manug243.knit/KnitColors?, kotlin/Function3<io.github.manug243.knit/KnitTabBarState, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function3<io.github.manug243.knit/KnitTopBarState, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // io.github.manug243.knit/KnitScaffold|KnitScaffold(io.github.manug243.knit.KnitNavigator<0:0>;kotlin.Function3<io.github.manug243.knit.KnitTabsScope<0:0>,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;kotlin.Function1<androidx.navigation3.runtime.NavKey,androidx.navigation3.runtime.NavEntry<androidx.navigation3.runtime.NavKey>>;androidx.compose.ui.Modifier?;kotlin.Function1<androidx.navigation3.runtime.NavKey,io.github.manug243.knit.KnitTopBar?>?;io.github.manug243.knit.KnitColors?;kotlin.Function3<io.github.manug243.knit.KnitTabBarState,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function3<io.github.manug243.knit.KnitTopBarState,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){0§<io.github.manug243.knit.KnitTab>}[0]
+final fun <#A: io.github.manug243.knit/KnitTab> io.github.manug243.knit/rememberKnitNavigator(kotlin.collections/List<#A>, androidx.savedstate.serialization/SavedStateConfiguration, #A?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int): io.github.manug243.knit/KnitNavigator<#A> // io.github.manug243.knit/rememberKnitNavigator|rememberKnitNavigator(kotlin.collections.List<0:0>;androidx.savedstate.serialization.SavedStateConfiguration;0:0?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){0§<io.github.manug243.knit.KnitTab>}[0]
+final fun io.github.manug243.knit/KnitModalBottomSheet(kotlin/Function0<kotlin/Unit>, androidx.compose.ui/Modifier?, kotlin/Function3<androidx.compose.foundation.layout/ColumnScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // io.github.manug243.knit/KnitModalBottomSheet|KnitModalBottomSheet(kotlin.Function0<kotlin.Unit>;androidx.compose.ui.Modifier?;kotlin.Function3<androidx.compose.foundation.layout.ColumnScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun io.github.manug243.knit/KnitTabBarHidden(androidx.compose.runtime/Composer?, kotlin/Int) // io.github.manug243.knit/KnitTabBarHidden|KnitTabBarHidden(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+final fun io.github.manug243.knit/KnitTabReselectEffect(kotlin.coroutines/SuspendFunction0<kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int) // io.github.manug243.knit/KnitTabReselectEffect|KnitTabReselectEffect(kotlin.coroutines.SuspendFunction0<kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+final fun io.github.manug243.knit/KnitTopBarOverride(io.github.manug243.knit/KnitTopBar, androidx.compose.runtime/Composer?, kotlin/Int) // io.github.manug243.knit/KnitTopBarOverride|KnitTopBarOverride(io.github.manug243.knit.KnitTopBar;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+final fun io.github.manug243.knit/io_github_manug243_knit_KnitAction$stableprop_getter(): kotlin/Int // io.github.manug243.knit/io_github_manug243_knit_KnitAction$stableprop_getter|io_github_manug243_knit_KnitAction$stableprop_getter(){}[0]
+final fun io.github.manug243.knit/io_github_manug243_knit_KnitColors$stableprop_getter(): kotlin/Int // io.github.manug243.knit/io_github_manug243_knit_KnitColors$stableprop_getter|io_github_manug243_knit_KnitColors$stableprop_getter(){}[0]
+final fun io.github.manug243.knit/io_github_manug243_knit_KnitDefaults$stableprop_getter(): kotlin/Int // io.github.manug243.knit/io_github_manug243_knit_KnitDefaults$stableprop_getter|io_github_manug243_knit_KnitDefaults$stableprop_getter(){}[0]
+final fun io.github.manug243.knit/io_github_manug243_knit_KnitIcon$stableprop_getter(): kotlin/Int // io.github.manug243.knit/io_github_manug243_knit_KnitIcon$stableprop_getter|io_github_manug243_knit_KnitIcon$stableprop_getter(){}[0]
+final fun io.github.manug243.knit/io_github_manug243_knit_KnitIcons$stableprop_getter(): kotlin/Int // io.github.manug243.knit/io_github_manug243_knit_KnitIcons$stableprop_getter|io_github_manug243_knit_KnitIcons$stableprop_getter(){}[0]
+final fun io.github.manug243.knit/io_github_manug243_knit_KnitNavigator$stableprop_getter(): kotlin/Int // io.github.manug243.knit/io_github_manug243_knit_KnitNavigator$stableprop_getter|io_github_manug243_knit_KnitNavigator$stableprop_getter(){}[0]
+final fun io.github.manug243.knit/io_github_manug243_knit_KnitRoutes$stableprop_getter(): kotlin/Int // io.github.manug243.knit/io_github_manug243_knit_KnitRoutes$stableprop_getter|io_github_manug243_knit_KnitRoutes$stableprop_getter(){}[0]
+final fun io.github.manug243.knit/io_github_manug243_knit_KnitTabBarItem$stableprop_getter(): kotlin/Int // io.github.manug243.knit/io_github_manug243_knit_KnitTabBarItem$stableprop_getter|io_github_manug243_knit_KnitTabBarItem$stableprop_getter(){}[0]
+final fun io.github.manug243.knit/io_github_manug243_knit_KnitTabBarState$stableprop_getter(): kotlin/Int // io.github.manug243.knit/io_github_manug243_knit_KnitTabBarState$stableprop_getter|io_github_manug243_knit_KnitTabBarState$stableprop_getter(){}[0]
+final fun io.github.manug243.knit/io_github_manug243_knit_KnitTabsScope$stableprop_getter(): kotlin/Int // io.github.manug243.knit/io_github_manug243_knit_KnitTabsScope$stableprop_getter|io_github_manug243_knit_KnitTabsScope$stableprop_getter(){}[0]
+final fun io.github.manug243.knit/io_github_manug243_knit_KnitTopBar$stableprop_getter(): kotlin/Int // io.github.manug243.knit/io_github_manug243_knit_KnitTopBar$stableprop_getter|io_github_manug243_knit_KnitTopBar$stableprop_getter(){}[0]
+final fun io.github.manug243.knit/io_github_manug243_knit_KnitTopBarState$stableprop_getter(): kotlin/Int // io.github.manug243.knit/io_github_manug243_knit_KnitTopBarState$stableprop_getter|io_github_manug243_knit_KnitTopBarState$stableprop_getter(){}[0]
+final fun io.github.manug243.knit/knitRoutes(kotlin/Function1<io.github.manug243.knit/KnitRoutes, kotlin/Unit>): androidx.savedstate.serialization/SavedStateConfiguration // io.github.manug243.knit/knitRoutes|knitRoutes(kotlin.Function1<io.github.manug243.knit.KnitRoutes,kotlin.Unit>){}[0]
+final fun io.github.manug243.knit/knitSafePadding(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.foundation.layout/PaddingValues // io.github.manug243.knit/knitSafePadding|knitSafePadding(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+final inline fun <#A: reified androidx.navigation3.runtime/NavKey> io.github.manug243.knit/knitRoutes(): androidx.savedstate.serialization/SavedStateConfiguration // io.github.manug243.knit/knitRoutes|knitRoutes(){0§<androidx.navigation3.runtime.NavKey>}[0]

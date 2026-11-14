@@ -9,8 +9,9 @@ when built with the iOS 26 SDK), Android gets Material 3 bars with a rail from 6
 
 ## Status
 
-Work in progress, not published yet. The first release will be `0.1.0` on Maven Central as
-`io.github.manug243:knit`. Until then the API can still change. See the [changelog](CHANGELOG.md).
+`0.1.0-alpha01` is the first release on Maven Central as `io.github.manug243:knit`. It is an alpha because knit
+depends on Material 3 `1.12.0-alpha03`, and the API can still change. The public API is tracked with Kotlin's ABI
+validation (`knit/api`). See the [changelog](CHANGELOG.md).
 
 The native iOS bars were checked on an iPhone with iOS 26. On Android the tabs, the top bar and back were checked on a
 Pixel, the newer additions only in tests. The web target compiles but has not been tried in a browser.
@@ -19,10 +20,24 @@ Pixel, the newer additions only in tests. The web target compiles but has not be
 
 | knit | Kotlin | Compose Multiplatform | Navigation 3 | Android `minSdk` |
 | --- | --- | --- | --- | --- |
-| `0.1.0` (unreleased) | 2.4.21 | 1.12.2 | 1.1.2 | 24 |
+| `0.1.0-alpha01` | 2.4.21 | 1.12.2 | 1.1.2 | 24 |
 
 Targets: Android, Desktop (JVM), iOS (`iosArm64`, `iosSimulatorArm64`) and Web (`js`, `wasmJs`). Liquid Glass needs an app
 built with the iOS 26 SDK (Xcode 26).
+
+## Installation
+
+knit is on Maven Central. Add it to the common source set of your shared module:
+
+```kotlin
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("io.github.manug243:knit:0.1.0-alpha01")
+        }
+    }
+}
+```
 
 ## Quick start
 
@@ -154,8 +169,10 @@ Run it with `./gradlew :example:run` on the desktop or `./gradlew :androidApp:in
 
 ```shell
 ./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:compileKotlinWasmJs :knit:compileKotlinJs
-./gradlew :knit:lint :androidApp:lintDebug :androidApp:assembleDebug
+./gradlew :knit:lint :knit:checkKotlinAbi :androidApp:lintDebug :androidApp:assembleDebug
 ```
+
+After an intended public API change, run `./gradlew :knit:updateKotlinAbi` and commit the updated files in `knit/api`.
 
 The project requires JDK 21 and Android SDK platform 37. The iOS tests (`./gradlew :knit:iosSimulatorArm64Test`) and
 the iOS demo need macOS with Xcode 26.

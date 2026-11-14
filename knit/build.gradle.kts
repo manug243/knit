@@ -10,10 +10,13 @@ plugins {
 }
 
 group = "io.github.manug243"
-version = "0.1.0"
+version = "0.1.0-alpha01"
 
 kotlin {
     explicitApi()
+
+    @OptIn(org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation::class)
+    abiValidation()
 
     android {
         namespace = "io.github.manug243.knit"
