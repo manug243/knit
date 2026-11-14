@@ -84,10 +84,9 @@ internal actual fun KnitPlatformShell(
     items: List<ShellItem>,
     selectedIndex: Int,
     barVisible: Boolean,
-    // Replaced by barVisibleBehindKeyboard here; the bar itself follows barVisible.
-    @Suppress("UNUSED_PARAMETER") barAllowed: Boolean,
-    // The native bar leaves for the keyboard, but the area a start screen keeps clear stays, see rootBarHeight.
-    barVisibleBehindKeyboard: Boolean,
+    barAllowed: Boolean,
+    // The native bar floats above the content and leaves for the keyboard; rootBarHeight keeps its area.
+    @Suppress("UNUSED_PARAMETER") barVisibleBehindKeyboard: Boolean,
     onSelect: (Int) -> Unit,
     topBar: ShellTopBar?,
     // Only the accent applies. The other colors and the custom bars are for the Compose bars of the
@@ -149,7 +148,7 @@ internal actual fun KnitPlatformShell(
     // the keyboard covers that area, and a screen that pads for the keyboard with imePadding() inside
     // knitSafeArea() counts it as already padded. Otherwise the content would drop to the bottom when the
     // keyboard closes and move up again while the bar area comes back.
-    val rootBarHeight by animateDpAsState(if (barVisibleBehindKeyboard) barHeight else 0.dp)
+    val rootBarHeight by animateDpAsState(if (barAllowed) barHeight else 0.dp)
     val shellPadding = ShellPadding { hasTopBar, isTabRoot ->
         val top = if (hasTopBar) ClassicNavigationBarHeight else 0.dp
         val bottom = if (isTabRoot) rootBarHeight else 0.dp

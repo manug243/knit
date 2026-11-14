@@ -159,10 +159,12 @@ public fun <T : KnitTab> KnitScaffold(
 
     val hideRequests = remember { TabBarHideRequests() }
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-    val barAllowed = !imeVisible && hideRequests.count == 0
+    // Only a KnitTabBarHidden takes the bar away for good. Neither the keyboard nor navigation change what
+    // a tab start screen keeps clear for it, so that screen never moves for them.
+    val barAllowed = hideRequests.count == 0
     // Where the bar sits next to the content (Material), it stays while the keyboard is open: the keyboard
     // covers it, and the content does not jump when the keyboard opens or closes.
-    val barRequested = navigator.isAtTabRoot && hideRequests.count == 0
+    val barRequested = navigator.isAtTabRoot && barAllowed
     val barItems = items.map { ShellItem(it.title, it.icon, it.badge) }
     val selectedIndex = items.indexOfFirst { it.tab == navigator.currentTab }
 
@@ -181,7 +183,7 @@ public fun <T : KnitTab> KnitScaffold(
     KnitPlatformShell(
         items = barItems,
         selectedIndex = selectedIndex,
-        barVisible = navigator.isAtTabRoot && barAllowed,
+        barVisible = navigator.isAtTabRoot && barAllowed && !imeVisible,
         barAllowed = barAllowed,
         barVisibleBehindKeyboard = barRequested,
         onSelect = { index -> navigator.select(items[index].tab) },
@@ -214,8 +216,9 @@ internal class ShellItem(
 
 /**
  * Draws the platform's chrome around [content] and provides [LocalKnitContentPadding].
- * [selectedIndex] and [onSelect] refer to positions in [items]. [barAllowed] is false while something
- * other than navigation hides the tab bar: the keyboard or a [KnitTabBarHidden].
+ * [selectedIndex] and [onSelect] refer to positions in [items]. [barVisible] also turns false while the
+ * keyboard is open. [barAllowed] is false only while a [KnitTabBarHidden] hides the tab bar, the keyboard
+ * and navigation do not change it.
  * [barVisibleBehindKeyboard] is [barVisible] without the keyboard, for bars that sit next to the content
  * and stay under an open keyboard instead of leaving (and moving the content).
  */
