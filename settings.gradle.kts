@@ -22,7 +22,9 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "knit"
+// Must differ from the :knit subproject. Apps that include knit as a composite build with
+// TYPESAFE_PROJECT_ACCESSORS would otherwise get two getKnit() accessors and fail to configure.
+rootProject.name = "knit-root"
 include(":knit")
 include(":example")
 include(":androidApp")

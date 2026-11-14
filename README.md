@@ -21,7 +21,7 @@ Pixel, the newer additions only in tests. The web target compiles but has not be
 | --- | --- | --- | --- | --- |
 | `0.1.0` (unreleased) | 2.3.21 | 1.12.2 | 1.1.2 | 24 |
 
-Targets: Android, Desktop (JVM), iOS (`iosArm64`, `iosSimulatorArm64`) and Web (`wasmJs`). Liquid Glass needs an app
+Targets: Android, Desktop (JVM), iOS (`iosArm64`, `iosSimulatorArm64`) and Web (`js`, `wasmJs`). Liquid Glass needs an app
 built with the iOS 26 SDK (Xcode 26).
 
 ## Quick start
@@ -152,7 +152,7 @@ Run it with `./gradlew :example:run` on the desktop or `./gradlew :androidApp:in
 ## Build
 
 ```shell
-./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:compileKotlinWasmJs
+./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:compileKotlinWasmJs :knit:compileKotlinJs
 ./gradlew :knit:lint :androidApp:lintDebug :androidApp:assembleDebug
 ```
 

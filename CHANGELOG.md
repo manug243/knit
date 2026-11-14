@@ -20,6 +20,6 @@ Planned for the first release, 0.1.0. Nothing is published yet.
 - `knitSafePadding()` and `Modifier.knitSafeArea()` for the space the system bars and knit's bars cover.
 - `KnitIcons` with common icons for both platforms, tab badges, `KnitTabReselectEffect`, `KnitModalBottomSheet`, `KnitTabBarHidden` and `navigator.navigate(tab, key)`.
 - Theming of the Material bars with `KnitDefaults.colors()`, an accent color for the native iOS bars, and slots for own tab and top bars.
-- Targets: Android (`minSdk 24`), Desktop (JVM), iOS (`iosArm64`, `iosSimulatorArm64`) and Web (`wasmJs`).
+- Targets: Android (`minSdk 24`), Desktop (JVM), iOS (`iosArm64`, `iosSimulatorArm64`) and Web (`js`, `wasmJs`).
 
 [Unreleased]: https://github.com/manug243/knit/commits/develop
