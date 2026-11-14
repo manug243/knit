@@ -25,9 +25,11 @@ kotlin {
     jvm("desktop")
     iosArm64()
     iosSimulatorArm64()
-    // Only so that apps with a web target can depend on knit. The web gets the plain Material chrome.
+    // Only so that apps with web targets (js and wasmJs) can depend on knit. Both share the Material chrome
+    // from webMain.
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs { browser() }
+    js { browser() }
 
     sourceSets {
         commonMain.dependencies {

@@ -19,7 +19,7 @@ Requirements:
 Commands:
 
 ```shell
-./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:compileKotlinWasmJs
+./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:compileKotlinWasmJs :knit:compileKotlinJs
 ./gradlew :knit:lint :androidApp:lintDebug
 ./gradlew :androidApp:assembleDebug
 ./gradlew :example:run
