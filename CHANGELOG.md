@@ -8,6 +8,8 @@ While the version is `0.x`, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.1.0-alpha02] - 2026-11-15
+
 ### Changed
 
 - Navigation 3 updated from 1.1.2 to 1.2.0.
@@ -30,5 +32,6 @@ First public release. It is an alpha because knit depends on Material 3 `1.12.0-
 - Targets: Android (`minSdk 24`), Desktop (JVM), iOS (`iosArm64`, `iosSimulatorArm64`) and Web (`js`, `wasmJs`).
 - ABI validation of the public API (`knit/api`).
 
-[Unreleased]: https://github.com/manug243/knit/compare/v0.1.0-alpha01...develop
+[Unreleased]: https://github.com/manug243/knit/compare/v0.1.0-alpha02...develop
+[0.1.0-alpha02]: https://github.com/manug243/knit/compare/v0.1.0-alpha01...v0.1.0-alpha02
 [0.1.0-alpha01]: https://github.com/manug243/knit/releases/tag/v0.1.0-alpha01
