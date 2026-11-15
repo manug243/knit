@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-  # Manual run of the whole workflow, including the iOS job, for example to get a fresh IPA.
+  # Manual run of the whole workflow, including the iOS job. Only manual runs build the unsigned IPA.
   workflow_dispatch:
 
 concurrency:
@@ -31,10 +31,10 @@ jobs:
         run: ./gradlew :knit:desktopTest :knit:testAndroidHostTest :knit:lint :knit:checkKotlinAbi :knit:compileKotlinWasmJs :knit:compileKotlinJs :example:compileKotlinDesktop :androidApp:lintDebug :androidApp:assembleDebug
 
   ios:
-    # iOS only runs when develop is promoted to main.
+    # iOS runs on every pull request into develop or main (macOS runners are free for public repositories).
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref == 'develop')
+      (github.event_name == 'pull_request' && (github.base_ref == 'develop' || github.base_ref == 'main'))
     # Liquid Glass needs the iOS 26 SDK, so this job pins a runner image that ships Xcode 26.
     runs-on: macos-26
     steps:
@@ -77,7 +77,9 @@ jobs:
           path: build/ios-screenshots
           if-no-files-found: warn
       # Unsigned on purpose: AltStore (or another sideloading tool) signs it with the tester's own Apple ID.
+      # Only built on manual runs (Actions > CI > Run workflow), pull requests skip it.
       - name: Build unsigned IPA for devices
+        if: github.event_name == 'workflow_dispatch'
         run: |
           xcodebuild build \
             -project iosApp/iosApp.xcodeproj \
@@ -96,6 +98,7 @@ jobs:
           (cd build/ipa && zip -qry knit-unsigned.ipa Payload)
           unzip -l build/ipa/knit-unsigned.ipa | tail -1
       - name: Upload unsigned IPA
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v7
         with:
           name: knit-unsigned-ipa
