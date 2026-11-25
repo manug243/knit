@@ -8,6 +8,8 @@ While the version is `0.x`, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+## [0.1.0-alpha03] - 2026-11-25
+
 ### Fixed
 
 - iOS: the back button no longer shows a hard-coded English "Back" when the screen below has no top bar. UIKit now labels it with its own localized default.
@@ -36,6 +38,7 @@ First public release. It is an alpha because knit depends on Material 3 `1.12.0-
 - Targets: Android (`minSdk 24`), Desktop (JVM), iOS (`iosArm64`, `iosSimulatorArm64`) and Web (`js`, `wasmJs`).
 - ABI validation of the public API (`knit/api`).
 
-[Unreleased]: https://github.com/manug243/knit/compare/v0.1.0-alpha02...develop
+[Unreleased]: https://github.com/manug243/knit/compare/v0.1.0-alpha03...develop
+[0.1.0-alpha03]: https://github.com/manug243/knit/compare/v0.1.0-alpha02...v0.1.0-alpha03
 [0.1.0-alpha02]: https://github.com/manug243/knit/compare/v0.1.0-alpha01...v0.1.0-alpha02
 [0.1.0-alpha01]: https://github.com/manug243/knit/releases/tag/v0.1.0-alpha01
