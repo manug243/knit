@@ -125,12 +125,12 @@ internal fun MaterialShell(
                 val custom = style.topBarContent
                 if (custom != null) {
                     // A custom bar handles the status bar inset itself, like TopAppBar does.
-                    custom(KnitTopBarState(bar.title, bar.actions, bar.backTitle != null, bar.onBack))
+                    custom(KnitTopBarState(bar.title, bar.actions, bar.canGoBack, bar.onBack))
                 } else {
                     CenterAlignedTopAppBar(
                         title = { Text(bar.title) },
                         navigationIcon = {
-                            if (bar.backTitle != null) {
+                            if (bar.canGoBack) {
                                 IconButton(onClick = bar.onBack) {
                                     Icon(imageVector = KnitBackArrow, contentDescription = "Back")
                                 }

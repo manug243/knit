@@ -466,7 +466,7 @@ private class TabBarSynchronizer {
  */
 @OptIn(ExperimentalForeignApi::class)
 private class NavigationBarSynchronizer {
-    private var signature: Triple<String, String?, List<Pair<String, String>>>? = null
+    private var signature: List<Any?>? = null
 
     // The button handlers read the actions from here, so they always call the latest callbacks
     // although the native buttons are only rebuilt when title or icon change.
@@ -474,8 +474,9 @@ private class NavigationBarSynchronizer {
 
     fun sync(bar: UINavigationBar, topBar: ShellTopBar) {
         actions = topBar.actions
-        val newSignature = Triple(
+        val newSignature = listOf(
             topBar.title,
+            topBar.canGoBack,
             topBar.backTitle,
             topBar.actions.map { it.label to it.icon.sfSymbol },
         )
@@ -493,7 +494,10 @@ private class NavigationBarSynchronizer {
             )
         }
         val items = buildList {
-            topBar.backTitle?.let { add(UINavigationItem(title = it)) }
+            // Without a title UIKit labels the back button with its own localized "Back".
+            if (topBar.canGoBack) {
+                add(topBar.backTitle?.let { UINavigationItem(title = it) } ?: UINavigationItem())
+            }
             add(current)
         }
         // Items change with the native push or pop animation while the bar is on screen. While it is

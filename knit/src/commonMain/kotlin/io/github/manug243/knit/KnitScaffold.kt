@@ -179,7 +179,8 @@ public fun <T : KnitTab> KnitScaffold(
         ShellTopBar(
             title = config.title,
             actions = config.actions,
-            backTitle = if (stack.size > 1) barFor(stack[stack.lastIndex - 1])?.title ?: "Back" else null,
+            canGoBack = stack.size > 1,
+            backTitle = if (stack.size > 1) barFor(stack[stack.lastIndex - 1])?.title else null,
             onBack = { navigator.back() },
         )
     }
