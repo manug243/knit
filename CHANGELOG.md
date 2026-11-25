@@ -8,6 +8,10 @@ While the version is `0.x`, minor releases may contain breaking changes.
 
 ## [Unreleased]
 
+### Fixed
+
+- iOS: the back button no longer shows a hard-coded English "Back" when the screen below has no top bar. UIKit now labels it with its own localized default.
+
 ## [0.1.0-alpha02] - 2026-11-15
 
 ### Changed
