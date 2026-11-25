@@ -9,7 +9,7 @@ when built with the iOS 26 SDK), Android gets Material 3 bars with a rail from 6
 
 ## Status
 
-`0.1.0-alpha03` is the current release on Maven Central as `io.github.manug243:knit`. It is an alpha because knit
+`0.1.0-alpha04` is the current release on Maven Central as `io.github.manug243:knit`. It is an alpha because knit
 depends on Material 3 `1.12.0-alpha03`, and the API can still change. The public API is tracked with Kotlin's ABI
 validation (`knit/api`). See the [changelog](CHANGELOG.md).
 
@@ -20,7 +20,7 @@ Pixel, the newer additions only in tests. The web target compiles but has not be
 
 | knit | Kotlin | Compose Multiplatform | Navigation 3 | Android `minSdk` |
 | --- | --- | --- | --- | --- |
-| `0.1.0-alpha03` | 2.4.21 | 1.12.2 | 1.2.0 | 24 |
+| `0.1.0-alpha04` | 2.4.21 | 1.12.2 | 1.2.0 | 24 |
 | `0.1.0-alpha02` | 2.4.21 | 1.12.2 | 1.2.0 | 24 |
 | `0.1.0-alpha01` | 2.4.21 | 1.12.2 | 1.1.2 | 24 |
 
@@ -35,7 +35,7 @@ knit is on Maven Central. Add it to the common source set of your shared module:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.manug243:knit:0.1.0-alpha03")
+            implementation("io.github.manug243:knit:0.1.0-alpha04")
         }
     }
 }
