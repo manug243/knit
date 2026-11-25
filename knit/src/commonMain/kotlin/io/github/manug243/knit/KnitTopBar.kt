@@ -28,13 +28,15 @@ public class KnitAction(
 )
 
 /**
- * Top bar content as the platform shells see it. [backTitle] is null on a tab's start screen,
- * where there is nothing to go back to. Otherwise it names the screen below, which iOS shows next
- * to the back arrow.
+ * Top bar content as the platform shells see it. [canGoBack] is false on a tab's start screen,
+ * where there is nothing to go back to. [backTitle] names the screen below, which iOS shows next to
+ * the back arrow. It is null when that screen has no bar, and iOS then shows its own localized
+ * default.
  */
 internal class ShellTopBar(
     val title: String,
     val actions: List<KnitAction>,
+    val canGoBack: Boolean,
     val backTitle: String?,
     val onBack: () -> Unit,
 )
